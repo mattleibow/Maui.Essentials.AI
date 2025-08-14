@@ -23,8 +23,8 @@ var response = await _aiService.ChatAsync("Summarize this document");
 - Automatic platform detection and optimization  
 - No complex setup or model management required
 
-### 🔄 **Intelligent Fallback System**
-Our revolutionary three-tier approach ensures your app always has AI capabilities:
+### 🔄 **Two-Tier On-Device AI System**
+Our revolutionary approach ensures your app always has AI capabilities while keeping everything on-device:
 
 1. **🏠 On-Device First** - Leverage native, OS-provided models
    - iOS: Foundation Models & Core ML
@@ -37,12 +37,6 @@ Our revolutionary three-tier approach ensures your app always has AI capabilitie
    - ONNX runtime support  
    - TensorFlow Lite models
    - Custom inference engines
-
-3. **☁️ Cloud Fallback** - Remote AI services
-   - Azure OpenAI
-   - OpenAI GPT models
-   - Custom API endpoints
-   - Hybrid on-device + cloud scenarios
 
 ### 🛡️ **Privacy & Performance First**
 - On-device processing keeps data private
@@ -59,6 +53,8 @@ Built on the robust foundation of **Microsoft.Extensions.AI**, Maui.Essentials.A
 - **Extensible Design**: Easy to add custom AI providers and models
 - **Testing Support**: Mock AI services for unit testing
 - **Observability**: Built-in logging, metrics, and tracing
+- **On-Device Focus**: All processing happens locally for privacy and offline capability
+- **IChatClient Compatibility**: Easy to swap with cloud providers if needed via the standard interface
 
 ## 🚀 Quick Start
 
@@ -116,14 +112,14 @@ public class ChatViewModel : ObservableObject
 ```csharp
 builder.Services.AddAI(options =>
 {
-    // Prefer on-device models
+    // Prefer on-device models first
     options.PreferOnDevice = true;
     
-    // Add custom ONNX model
+    // Add custom ONNX model as secondary option
     options.AddCustomModel("my-model.onnx", ModelType.ONNX);
     
-    // Fallback to OpenAI
-    options.AddOpenAI(apiKey: "your-key");
+    // Add additional custom models for different scenarios
+    options.AddCustomModel("sentiment-model.onnx", ModelType.ONNX, useFor: "sentiment");
 });
 ```
 
@@ -156,12 +152,12 @@ builder.Services.AddPhiSilica();
 
 ## 🎯 Supported Platforms
 
-| Platform | On-Device Models | Custom Models | Cloud Fallback |
-|----------|------------------|---------------|----------------|
-| **iOS** | ✅ Foundation Models, Core ML | ✅ Core ML, ONNX | ✅ Full Support |
-| **Android** | ✅ Google AI Edge, TF Lite | ✅ TensorFlow Lite, ONNX | ✅ Full Support |
-| **Windows** | ✅ Phi Silica, DirectML | ✅ ONNX Runtime, DirectML | ✅ Full Support |
-| **macOS** | ✅ Core ML, Metal | ✅ Core ML, ONNX | ✅ Full Support |
+| Platform | On-Device Models | Custom Models |
+|----------|------------------|---------------|
+| **iOS** | ✅ Foundation Models, Core ML | ✅ Core ML, ONNX |
+| **Android** | ✅ Google AI Edge, TF Lite | ✅ TensorFlow Lite, ONNX |
+| **Windows** | ✅ Phi Silica, DirectML | ✅ ONNX Runtime, DirectML |
+| **macOS** | ✅ Core ML, Metal | ✅ Core ML, ONNX |
 
 ## 📚 Documentation & Resources
 
@@ -181,11 +177,12 @@ Unlike traditional AI integrations that require you to:
 - ❌ Write different code for different platforms
 
 **Maui.Essentials.AI lets you:**
-- ✅ Write once, run everywhere with optimal AI
+- ✅ Write once, run everywhere with optimal on-device AI
 - ✅ Automatically use the best available AI for each device
-- ✅ Gracefully handle offline scenarios
+- ✅ Work completely offline with local processing
 - ✅ Focus on your app's features, not AI infrastructure
 - ✅ Get privacy-first AI with on-device processing
+- ✅ Easy to extend with custom models or swap implementations via IChatClient
 
 ## 🚧 Development Status
 
