@@ -64,7 +64,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="../../src/Maui.Essentials.AI/Maui.Essentials.AI.csproj" />
+		<ProjectReference Include="../../src/Maui.Essentials.AI/Maui.Essentials.AI.csproj" />
 	</ItemGroup>
 
 </Project>
