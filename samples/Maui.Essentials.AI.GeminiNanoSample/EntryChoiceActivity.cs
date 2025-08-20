@@ -1,7 +1,6 @@
 using Android.Content;
 using Android.Views;
 using AndroidX.AppCompat.App;
-using AndroidX.Lifecycle;
 using Google.AI.Edge.AICore;
 
 namespace Maui.Essentials.AI.GeminiNanoSample;
@@ -32,7 +31,7 @@ public class EntryChoiceActivity : AppCompatActivity
         EnsureModelDownloaded();
     }
 
-    private void EnsureModelDownloaded()
+    private async void EnsureModelDownloaded()
     {
         var downloadProgressTextView = FindViewById<TextView>(Resource.Id.download_progress_text_view)!;
 
@@ -68,22 +67,19 @@ public class EntryChoiceActivity : AppCompatActivity
 
         model = new GenerativeModel(generationConfig, downloadConfig);
 
-        Task.Run(async () =>
+        try
+        {   
+            await model.PrepareInferenceEngineAsync(this);
+        }
+        catch (GenerativeAIException e)
         {
-            try
-            {   
-                await model.PrepareInferenceEngineAsync(this);
-            }
-            catch (GenerativeAIException e)
-            {
-                Console.WriteLine($"Failed to check model availability: {e}");
+            Console.WriteLine($"Failed to check model availability: {e}");
 
-                RunOnUiThread(() =>
-                {
-                    Toast.MakeText(ApplicationContext, e.Message, ToastLength.Short)!.Show();
-                });
-            }
-        });
+            RunOnUiThread(() =>
+            {
+                Toast.MakeText(ApplicationContext, e.Message, ToastLength.Short)!.Show();
+            });
+        }
     }
 
     protected override void OnDestroy()
@@ -91,5 +87,45 @@ public class EntryChoiceActivity : AppCompatActivity
         base.OnDestroy();
 
         model?.Close();
+    }
+
+    class DownloadCallbackImpl : Java.Lang.Object, IDownloadCallback
+    {
+        private readonly Action<long> onDownloadStartedAction;
+        private readonly Action<string, GenerativeAIException> onDownloadFailedAction;
+        private readonly Action<long> onDownloadProgressAction;
+        private readonly Action onDownloadCompletedAction;
+
+        public DownloadCallbackImpl(
+            Action<long> onDownloadStarted,
+            Action<string, GenerativeAIException> onDownloadFailed,
+            Action<long> onDownloadProgress,
+            Action onDownloadCompleted)
+        {
+            onDownloadStartedAction = onDownloadStarted;
+            onDownloadFailedAction = onDownloadFailed;
+            onDownloadProgressAction = onDownloadProgress;
+            onDownloadCompletedAction = onDownloadCompleted;
+        }
+
+        public void OnDownloadStarted(long bytesToDownload)
+        {
+            onDownloadStartedAction?.Invoke(bytesToDownload);
+        }
+
+        public void OnDownloadFailed(string failureStatus, GenerativeAIException e)
+        {
+            onDownloadFailedAction?.Invoke(failureStatus, e);
+        }
+
+        public void OnDownloadProgress(long totalBytesDownloaded)
+        {
+            onDownloadProgressAction?.Invoke(totalBytesDownloaded);
+        }
+
+        public void OnDownloadCompleted()
+        {
+            onDownloadCompletedAction?.Invoke();
+        }
     }
 }

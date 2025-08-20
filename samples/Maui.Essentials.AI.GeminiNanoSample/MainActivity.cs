@@ -1,21 +1,8 @@
-using Android.App;
-using Android.Content;
-using Android.OS;
 using Android.Text;
-using Android.Util;
-using Android.Widget;
 using AndroidX.AppCompat.App;
-using AndroidX.Concurrent.Futures;
-using AndroidX.Core.Content;
 using AndroidX.RecyclerView.Widget;
 using Google.AI.Edge.AICore;
-using Google.AI.Edge.AICore.Java;
-using Google.Common.Util.Concurrent;
-using Java.Util.Concurrent;
-using ReactiveStreams;
-using System;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Maui.Essentials.AI.GeminiNanoSample;
 
@@ -25,8 +12,6 @@ namespace Maui.Essentials.AI.GeminiNanoSample;
 [Activity(ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
 public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigUpdateListener
 {
-    private const string Tag = "MainActivity";
-
     private EditText requestEditText = null!;
     private Button sendButton = null!;
     private CompoundButton streamingSwitch = null!;
@@ -34,7 +19,6 @@ public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigU
     private RecyclerView contentRecyclerView = null!;
 
     private GenerativeModel? model;
-    private GenerativeModelFutures? modelFutures;
 
     private bool useStreaming;
     private bool hasFirstStreamingResult;
@@ -87,7 +71,7 @@ public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigU
     {
         base.OnDestroy();
 
-        modelFutures?.GenerativeModel.Close();
+        model?.Close();
     }
 
     private void InitGenerativeModel()
@@ -103,69 +87,48 @@ public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigU
         };
 
         model = new GenerativeModel(configBuilder.Build());
-
-        modelFutures = GenerativeModelFutures.From(model);
     }
 
     private async Task GenerateContent(string request)
     {
-        var content = new Content.Builder().AddText(request).Build();
+        var content = new Content.Builder()
+            .AddText(request)
+            .Build();
 
-        if (useStreaming)
+        try
         {
-            hasFirstStreamingResult = false;
+            if (useStreaming)
+            {
+                hasFirstStreamingResult = false;
 
-            var resultBuilder = new StringBuilder();
+                var resultBuilder = new StringBuilder();
 
-            modelFutures!.GenerateContentStream(content).Subscribe(new Subscriber<GenerateContentResponse>(
-                onSubscribe: s =>
-                {
-                    s.Request(long.MaxValue);
-                },
-                onNext: response =>
+                await foreach (var response in model!.GenerateContentStreamAsync(content))
                 {
                     resultBuilder.Append(response.Text);
-                    RunOnUiThread(() =>
-                    {
-                        if (hasFirstStreamingResult)
-                            contentAdapter.UpdateStreamingResponse(resultBuilder.ToString());
-                        else
-                            contentAdapter.AddContent(ContentAdapter.ViewTypeResponse, resultBuilder.ToString());
 
-                        hasFirstStreamingResult = true;
-                    });
-                },
-                onError: ex =>
-                {
-                    Console.WriteLine("Failed to subscribe: " + ex);
+                    if (hasFirstStreamingResult)
+                        contentAdapter.UpdateStreamingResponse(resultBuilder.ToString());
+                    else
+                        contentAdapter.AddContent(ContentAdapter.ViewTypeResponse, resultBuilder.ToString());
 
-                    RunOnUiThread(() =>
-                    {
-                        contentAdapter.AddContent(ContentAdapter.ViewTypeResponseError, ex.Message);
-                        EndGeneratingUi();
-                    });
-                },
-                onComplete: () =>
-                {
-                    RunOnUiThread(() => EndGeneratingUi());
-                }));
-        }
-        else
-        {
-            try
+                    hasFirstStreamingResult = true;
+                }
+            }
+            else
             {
-                var result = await modelFutures!.GenerateContent(content).AsTask<GenerateContentResponse>(ContextCompat.GetMainExecutor(this)!);
+                var result = await model!.GenerateContentAsync(this, content);
 
                 contentAdapter.AddContent(ContentAdapter.ViewTypeResponse, result?.Text ?? "");
-
-                EndGeneratingUi();
             }
-            catch (Exception e)
-            {
-                contentAdapter.AddContent(ContentAdapter.ViewTypeResponseError, e.Message ?? "Unknown error");
-
-                EndGeneratingUi();
-            }
+        }
+        catch (Exception e)
+        {
+            contentAdapter.AddContent(ContentAdapter.ViewTypeResponseError, e.Message ?? "Unknown error");
+        }
+        finally
+        {
+            EndGeneratingUi();
         }
     }
 
@@ -189,8 +152,8 @@ public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigU
 
     public void OnConfigUpdated()
     {
-        modelFutures?.GenerativeModel.Close();
-
+        model?.Close();
+        
         InitGenerativeModel();
     }
 }

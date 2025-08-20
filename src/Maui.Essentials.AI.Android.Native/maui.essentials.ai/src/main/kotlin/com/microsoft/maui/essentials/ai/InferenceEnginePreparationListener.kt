@@ -2,5 +2,5 @@ package com.microsoft.maui.essentials.ai
 
 interface InferenceEnginePreparationListener {
     fun onSuccess()
-    fun onFailure(exception: Exception)
+    fun onFailure(error: Throwable)
 }

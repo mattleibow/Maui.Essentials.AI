@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.GeminiNanoSample", "samples\Maui.Essentials.AI.GeminiNanoSample\Maui.Essentials.AI.GeminiNanoSample.csproj", "{B310116F-7D15-472E-826F-086F300C81BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.Android", "src\Maui.Essentials.AI.Android\Maui.Essentials.AI.Android.csproj", "{2197EAC0-7218-4983-8617-91C3C7D53E4F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,18 @@ Global
 		{B310116F-7D15-472E-826F-086F300C81BA}.Release|x64.Build.0 = Release|Any CPU
 		{B310116F-7D15-472E-826F-086F300C81BA}.Release|x86.ActiveCfg = Release|Any CPU
 		{B310116F-7D15-472E-826F-086F300C81BA}.Release|x86.Build.0 = Release|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Debug|x64.Build.0 = Debug|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Debug|x86.Build.0 = Debug|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Release|x64.ActiveCfg = Release|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Release|x64.Build.0 = Release|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Release|x86.ActiveCfg = Release|Any CPU
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -84,5 +98,6 @@ Global
 		{4B92487C-B6CC-409F-A371-03AE351C1C03} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{41FA95C2-59AC-469E-A204-14B934C00A53} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{B310116F-7D15-472E-826F-086F300C81BA} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{2197EAC0-7218-4983-8617-91C3C7D53E4F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

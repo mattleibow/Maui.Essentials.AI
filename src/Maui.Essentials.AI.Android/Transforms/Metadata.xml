@@ -10,7 +10,12 @@
   <attr path="//package[@name='com.microsoft.maui.essentials.ai']" name="managedName">Maui.Essentials.AI</attr>
 
   <!-- Make all types internal by default -->
-  <!-- <attr path="//class[@visibility='public']" name="visibility">internal</attr> -->
-  <!-- <attr path="//interface[@visibility='public']" name="visibility">internal</attr> -->
+  <attr path="//class[@visibility='public']" name="visibility">internal</attr>
+  <attr path="//interface[@visibility='public']" name="visibility">internal</attr>
+
+  <!-- Do not generate events -->
+  <attr path="//interface[@name='InferenceEnginePreparationListener']/method" name="eventName"></attr>
+  <attr path="//interface[@name='ContentGenerationListener']/method" name="eventName"></attr>
+  <attr path="//interface[@name='StreamContentGenerationListener']/method" name="eventName"></attr>
 
 </metadata>
