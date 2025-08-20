@@ -22,4 +22,8 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 	</ItemGroup>
 
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+	    <ProjectReference Include="..\Maui.Essentials.AI.Android\Maui.Essentials.AI.Android.csproj" />
+	</ItemGroup>
+
 </Project>

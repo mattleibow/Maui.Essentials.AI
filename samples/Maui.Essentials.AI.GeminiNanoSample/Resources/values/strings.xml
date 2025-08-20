@@ -16,11 +16,9 @@
 -->
 <resources>
   <string name="app_name" translatable="false">Gemini Nano demo</string>
-  <string name="kotlin_entry_title" translatable="false">Run the demo written in Kotlin</string>
-  <string name="java_entry_title" translatable="false">Run the demo written in Java</string>
+  <string name="csharp_entry_title" translatable="false">Run the demo written in C#</string>
   <string name="button_send" translatable="false">Send</string>
   <string name="generating" translatable="false">Generating...</string>
-  <string name="button_cancel" translatable="false">Cancel</string>
   <string name="streaming_switch" translatable="false">Streaming</string>
   <string name="hint_temperature" translatable="false">Temperature</string>
   <string name="hint_top_k" translatable="false">TopK</string>

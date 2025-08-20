@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.Tests", "tests\Maui.Essentials.AI.Tests\Maui.Essentials.AI.Tests.csproj", "{41FA95C2-59AC-469E-A204-14B934C00A53}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.GeminiNanoSample", "samples\Maui.Essentials.AI.GeminiNanoSample\Maui.Essentials.AI.GeminiNanoSample.csproj", "{B310116F-7D15-472E-826F-086F300C81BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,18 @@ Global
 		{41FA95C2-59AC-469E-A204-14B934C00A53}.Release|x64.Build.0 = Release|Any CPU
 		{41FA95C2-59AC-469E-A204-14B934C00A53}.Release|x86.ActiveCfg = Release|Any CPU
 		{41FA95C2-59AC-469E-A204-14B934C00A53}.Release|x86.Build.0 = Release|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Release|x64.Build.0 = Release|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{B310116F-7D15-472E-826F-086F300C81BA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -69,5 +83,6 @@ Global
 		{8B3E257C-6784-4A1C-AD40-3DCDED625A21} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{4B92487C-B6CC-409F-A371-03AE351C1C03} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{41FA95C2-59AC-469E-A204-14B934C00A53} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{B310116F-7D15-472E-826F-086F300C81BA} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 EndGlobal

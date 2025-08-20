@@ -1,4 +1,4 @@
-# Maui.Essentials.AI.GeminiNano.Android
+# Maui.Essentials.AI.GeminiNanoSample
 
 This is a .NET for Android conversion of the Google AI Edge SDK Gemini Nano sample application. 
 
