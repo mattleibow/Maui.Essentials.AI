@@ -85,6 +85,45 @@
                            TextColor="{DynamicResource Gray500}"/>
                 </VerticalStackLayout>
             </Border>
+
+            <!-- Error Simulation Section -->
+            <Border BackgroundColor="{DynamicResource Gray100}"
+                    Stroke="{DynamicResource Gray200}"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                
+                <VerticalStackLayout Padding="16" Spacing="12">
+                    <Label Text="Error Simulation" 
+                           FontSize="18" 
+                           FontAttributes="Bold"/>
+                    
+                    <HorizontalStackLayout Spacing="12">
+                        <Switch IsToggled="{Binding SimulateError}" 
+                                VerticalOptions="Center"/>
+                        <VerticalStackLayout>
+                            <Label Text="Simulate Errors" 
+                                   FontSize="16"/>
+                            <Label Text="Forces the AI service to throw errors for testing error handling" 
+                                   FontSize="12" 
+                                   TextColor="{DynamicResource Gray600}"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                    
+                    <HorizontalStackLayout Spacing="12">
+                        <Switch IsToggled="{Binding SimulateStreamError}" 
+                                VerticalOptions="Center"/>
+                        <VerticalStackLayout>
+                            <Label Text="Simulate Mid-Stream Errors" 
+                                   FontSize="16"/>
+                            <Label Text="Errors after the first message chunk in streaming mode" 
+                                   FontSize="12" 
+                                   TextColor="{DynamicResource Gray600}"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
             
         </VerticalStackLayout>
     </ScrollView>

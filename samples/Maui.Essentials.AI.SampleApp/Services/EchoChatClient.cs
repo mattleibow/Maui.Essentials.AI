@@ -10,15 +10,18 @@ public sealed class EchoChatClient : IChatClient
 {
     private readonly TimeSpan _responseDelay;
     private readonly ChatClientMetadata _metadata;
+    private readonly ISettingsService _settingsService;
 
     public ChatClientMetadata Metadata => _metadata;
 
     /// <summary>
     /// Creates a new EchoChatClient instance
     /// </summary>
+    /// <param name="settingsService">Settings service to check for intentional error flag</param>
     /// <param name="modelId">ID to use for the model in responses</param>
-    public EchoChatClient(string modelId = "Echo")
+    public EchoChatClient(ISettingsService settingsService, string modelId = "Echo")
     {
+        _settingsService = settingsService;
         _responseDelay = TimeSpan.FromMilliseconds(500);
         _metadata = new ChatClientMetadata(modelId);
     }
@@ -31,6 +34,12 @@ public sealed class EchoChatClient : IChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        // Check for intentional error
+        if (_settingsService.SimulateError)
+        {
+            throw new InvalidOperationException("Simulated error for testing purposes");
+        }
+
         // Simulate processing delay
         await Task.Delay(_responseDelay, cancellationToken);
 
@@ -57,6 +66,12 @@ public sealed class EchoChatClient : IChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        // Check for intentional error
+        if (_settingsService.SimulateError)
+        {
+            throw new InvalidOperationException("Simulated streaming error for testing purposes");
+        }
+
         // Simulate processing delay
         await Task.Delay(_responseDelay, cancellationToken);
 
@@ -81,6 +96,12 @@ public sealed class EchoChatClient : IChatClient
                 ModelId = _metadata.DefaultModelId,
                 Role = ChatRole.Assistant
             };
+
+            // Check for mid-stream error after first chunk
+            if (i == 0 && _settingsService.SimulateStreamError)
+            {
+                throw new InvalidOperationException("Simulated mid-stream error for testing purposes");
+            }
 
             // Small delay between words to simulate streaming
             if (i < words.Length - 1)

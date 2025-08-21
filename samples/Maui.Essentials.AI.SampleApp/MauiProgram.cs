@@ -20,8 +20,8 @@ public static class MauiProgram
 			});
 
 		// Services and VMs
-		builder.Services.AddSingleton<IChatClient, EchoChatClient>();
 		builder.Services.AddSingleton<ISettingsService, SettingsService>();
+		builder.Services.AddSingleton<IChatClient, EchoChatClient>();
 		builder.Services.AddSingleton<ChatViewModel>();
 		builder.Services.AddSingleton<SettingsViewModel>();
 		builder.Services.AddSingleton<MainPage>();

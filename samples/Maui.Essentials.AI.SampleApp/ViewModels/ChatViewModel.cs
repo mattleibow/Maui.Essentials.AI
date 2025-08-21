@@ -132,39 +132,27 @@ public partial class ChatViewModel : ObservableObject
         var assistantMessage = new ChatMessageViewModel(ChatMessageRole.Assistant, "");
         Messages.Add(assistantMessage);
 
+        // Convert UI messages to AI client messages
+        var aiMessages = ConvertToAIMessages(Messages.Take(Messages.Count - 1));
+        
+        // Send the request
         var responseBuilder = new StringBuilder();
-
-        try
+        await foreach (var update in _chatClient.GetStreamingResponseAsync(aiMessages))
         {
-            // Convert UI messages to AI client messages
-            var aiMessages = ConvertToAIMessages(Messages.Take(Messages.Count - 1));
-            
-            // Send the request
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(aiMessages))
+            if (update.Contents is not { } contents)
+                continue;
+
+            foreach (var content in contents)
             {
-                if (update.Contents is not { } contents)
+                // Skip empty messages
+                if (content is not TextContent textContent || string.IsNullOrEmpty(textContent.Text))
                     continue;
 
-                foreach (var content in contents)
-                {
-                    // Skip empty messages
-                    if (content is not TextContent textContent || string.IsNullOrEmpty(textContent.Text))
-                        continue;
+                responseBuilder.Append(textContent.Text);
 
-                    responseBuilder.Append(textContent.Text);
-
-                    // Update the last message in real-time
-                    assistantMessage.Text = responseBuilder.ToString();
-                }
+                // Update the last message in real-time
+                assistantMessage.Text = responseBuilder.ToString();
             }
-        }
-        catch (Exception ex)
-        {
-            // If streaming fails, replace the assistant message with error
-            assistantMessage.Role = ChatMessageRole.System;
-            assistantMessage.Text = $"Streaming error: {ex.Message}";
-
-            throw;
         }
     }
 
