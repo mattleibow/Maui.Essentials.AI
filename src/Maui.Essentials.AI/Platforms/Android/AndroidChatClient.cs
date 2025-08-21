@@ -1,18 +1,14 @@
 using Microsoft.Extensions.AI;
 using System.Runtime.CompilerServices;
-
-#if ANDROID
 using Google.AI.Edge.AICore;
 using AndroidX.Lifecycle;
-#endif
 
 namespace Maui.Essentials.AI;
 
-#if ANDROID
 /// <summary>
 /// Android implementation of ChatClient using Google AI Edge (Gemini Nano)
 /// </summary>
-public sealed class AndroidChatClient : ChatClientBase
+public sealed class AndroidChatClient : IChatClient
 {
     private readonly GenerativeModel _model;
     private readonly string _modelName;
@@ -32,7 +28,7 @@ public sealed class AndroidChatClient : ChatClientBase
     /// <summary>
     /// Gets a chat completion response from Gemini Nano
     /// </summary>
-    public override async Task<ChatResponse> GetResponseAsync(
+    public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages, 
         ChatOptions? options = null, 
         CancellationToken cancellationToken = default)
@@ -64,7 +60,7 @@ public sealed class AndroidChatClient : ChatClientBase
     /// <summary>
     /// Gets streaming chat completion updates from Gemini Nano
     /// </summary>
-    public override async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages, 
         ChatOptions? options = null, 
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -117,6 +113,14 @@ public sealed class AndroidChatClient : ChatClientBase
         await _model.PrepareInferenceEngineAsync(lifecycleOwner, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets a service instance from the client
+    /// </summary>
+    public object? GetService(Type serviceType, object? serviceKey = null)
+    {
+        return serviceType.IsInstanceOfType(this) ? this : null;
+    }
+
     private static Content[] ConvertMessagesToContents(IEnumerable<ChatMessage> chatMessages)
     {
         var contents = new List<Content>();
@@ -152,14 +156,13 @@ public sealed class AndroidChatClient : ChatClientBase
         return response.Text ?? string.Empty;
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
         if (!_disposed)
         {
             _disposed = true;
             // GenerativeModel doesn't implement IDisposable, so no cleanup needed
-            base.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }
-#endif
