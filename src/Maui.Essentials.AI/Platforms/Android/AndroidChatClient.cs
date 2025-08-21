@@ -1,56 +1,63 @@
 using Microsoft.Extensions.AI;
 using System.Runtime.CompilerServices;
 using Google.AI.Edge.AICore;
-using AndroidX.Lifecycle;
 
 namespace Maui.Essentials.AI;
 
 /// <summary>
 /// Android implementation of ChatClient using Google AI Edge (Gemini Nano)
 /// </summary>
-public sealed class AndroidChatClient : IChatClient
+public sealed class AICoreChatClient : IChatClient
 {
     private readonly GenerativeModel _model;
-    private readonly string _modelName;
+    private readonly ChatClientMetadata _metadata;
+
     private bool _disposed;
 
+    public ChatClientMetadata Metadata => _metadata;
+
     /// <summary>
-    /// Creates a new AndroidChatClient instance
+    /// Creates a new AICoreChatClient instance
     /// </summary>
     /// <param name="model">The GenerativeModel instance to use</param>
-    /// <param name="modelName">Name of the model for responses</param>
-    public AndroidChatClient(GenerativeModel model, string modelName = "Gemini-Nano")
+    /// <param name="modelId">ID of the model for responses</param>
+    public AICoreChatClient(GenerativeModel model, string? modelId = null)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
-        _modelName = modelName;
+
+        _metadata = new ChatClientMetadata(
+            providerName: "Google AI Edge AICore",
+            defaultModelId: modelId ?? "Gemini-Nano");
     }
 
     /// <summary>
     /// Gets a chat completion response from Gemini Nano
     /// </summary>
     public async Task<ChatResponse> GetResponseAsync(
-        IEnumerable<ChatMessage> chatMessages, 
-        ChatOptions? options = null, 
+        IEnumerable<ChatMessage> chatMessages,
+        ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(AndroidChatClient));
-        
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
         try
         {
-            var contents = ConvertMessagesToContents(chatMessages);
-            
+            await PrepareInferenceEngineAsync(cancellationToken);
+
+            var contents = ConvertToContent(chatMessages).ToArray();
+
             var response = await _model.GenerateContentAsync(cancellationToken, contents);
-            
-            var responseText = ExtractTextFromResponse(response);
-            
-            var chatMessage = new ChatMessage(ChatRole.Assistant, responseText);
-            return new ChatResponse(chatMessage)
+
+            var textContent = ConvertToTextContent(response);
+
+            return new ChatResponse()
             {
-                ModelId = _modelName,
+                Messages = { new ChatMessage(ChatRole.Assistant, [textContent]) },
+                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
                 FinishReason = ChatFinishReason.Stop
             };
         }
-        catch (Exception ex) when (!(ex is OperationCanceledException))
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Convert to a more appropriate exception type if needed
             throw new InvalidOperationException($"Error generating content: {ex.Message}", ex);
@@ -61,36 +68,38 @@ public sealed class AndroidChatClient : IChatClient
     /// Gets streaming chat completion updates from Gemini Nano
     /// </summary>
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        IEnumerable<ChatMessage> chatMessages, 
-        ChatOptions? options = null, 
+        IEnumerable<ChatMessage> chatMessages,
+        ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(AndroidChatClient));
-        
-        var contents = ConvertMessagesToContents(chatMessages);
-        
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        await PrepareInferenceEngineAsync(cancellationToken);
+
+        var contents = ConvertToContent(chatMessages).ToArray();
+
         await foreach (var response in _model.GenerateContentStreamAsync(cancellationToken, contents))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
-            var text = ExtractTextFromResponse(response);
-            
-            if (!string.IsNullOrEmpty(text))
+
+            var textContent = ConvertToTextContent(response);
+
+            if (string.IsNullOrEmpty(textContent.Text))
+                continue;
+
+            yield return new ChatResponseUpdate
             {
-                yield return new ChatResponseUpdate
-                {
-                    Contents = [new TextContent(text)],
-                    ModelId = _modelName,
-                    Role = ChatRole.Assistant
-                };
-            }
+                Contents = [textContent],
+                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
+                Role = ChatRole.Assistant
+            };
         }
 
         // Final update to indicate completion
         yield return new ChatResponseUpdate
         {
             FinishReason = ChatFinishReason.Stop,
-            ModelId = _modelName,
+            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
             Role = ChatRole.Assistant
         };
     }
@@ -100,69 +109,56 @@ public sealed class AndroidChatClient : IChatClient
     /// </summary>
     public async Task PrepareInferenceEngineAsync(CancellationToken cancellationToken = default)
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(AndroidChatClient));
+        ObjectDisposedException.ThrowIf(_disposed, this);
         await _model.PrepareInferenceEngineAsync(cancellationToken);
-    }
-
-    /// <summary>
-    /// Prepare the inference engine with lifecycle management
-    /// </summary>
-    public async Task PrepareInferenceEngineAsync(ILifecycleOwner lifecycleOwner, CancellationToken cancellationToken = default)
-    {
-        if (_disposed) throw new ObjectDisposedException(nameof(AndroidChatClient));
-        await _model.PrepareInferenceEngineAsync(lifecycleOwner, cancellationToken);
     }
 
     /// <summary>
     /// Gets a service instance from the client
     /// </summary>
-    public object? GetService(Type serviceType, object? serviceKey = null)
+    object? IChatClient.GetService(Type serviceType, object? serviceKey)
     {
-        return serviceType.IsInstanceOfType(this) ? this : null;
+        ArgumentNullException.ThrowIfNull(serviceType);
+
+        return
+            serviceKey is not null ? null :
+            serviceType == typeof(ChatClientMetadata) ? _metadata :
+            serviceType.IsInstanceOfType(this) ? this :
+            null;
     }
 
-    private static Content[] ConvertMessagesToContents(IEnumerable<ChatMessage> chatMessages)
+    private static IEnumerable<Content> ConvertToContent(IEnumerable<ChatMessage> chatMessages)
     {
-        var contents = new List<Content>();
-        
         foreach (var message in chatMessages)
         {
-            if (message.Role == ChatRole.User && !string.IsNullOrEmpty(message.Text))
+            if (!string.IsNullOrEmpty(message.Text))
             {
-                // For Gemini Nano, we typically only send the user message
-                // System messages and assistant messages are handled differently
-                var content = new Content.Builder()
-                    .AddText(message.Text)
-                    .Build();
-                contents.Add(content);
+                yield return ConvertToContent(message);
             }
         }
-        
-        // If no user messages found, create a default content
-        if (contents.Count == 0)
-        {
-            var content = new Content.Builder()
-                .AddText("Hello")
-                .Build();
-            contents.Add(content);
-        }
-        
-        return contents.ToArray();
     }
 
-    private static string ExtractTextFromResponse(GenerateContentResponse response)
-    {
-        // Extract text from the response using the Text property
-        return response.Text ?? string.Empty;
-    }
+    private static Content ConvertToContent(ChatMessage message) =>
+        new Content.Builder()
+            .AddText(message.Text)
+            .SetRole(ConvertToContentRole(message.Role))
+            .Build();
+
+    private static ContentRole ConvertToContentRole(ChatRole role) =>
+        role == ChatRole.User ? ContentRole.User : ContentRole.Model;
+
+    private static TextContent ConvertToTextContent(GenerateContentResponse response) =>
+        new TextContent(response.Text ?? string.Empty);
 
     public void Dispose()
     {
-        if (!_disposed)
-        {
-            _disposed = true;
-            // GenerativeModel doesn't implement IDisposable, so no cleanup needed
-            GC.SuppressFinalize(this);
-        }
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        _model?.Close();
+
+        GC.SuppressFinalize(this);
     }
 }
