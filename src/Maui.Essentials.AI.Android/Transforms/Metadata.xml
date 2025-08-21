@@ -1,0 +1,21 @@
+<metadata>
+
+  <!-- Fix companions -->
+  <attr path="/api/package/class[substring(@name,string-length(@name)-9)='.Companion']" name="managedName">CompanionStatic</attr>
+  <!-- <remove-node path="/api/package/class[substring(@name,string-length(@name)-9)='.Companion' and count(method)=0 and count(field)=0]" /> -->
+  <!-- <attr path="/api/package/class[substring(@name,string-length(@name)-7)='.Default']" name="managedName">DefaultStatic</attr> -->
+  <!-- <remove-node path="/api/package/class[substring(@name,string-length(@name)-7)='.Default' and count(method)=0 and count(field)=0]" /> -->
+
+  <!-- Normalize the namespace for .NET -->
+  <attr path="//package[@name='com.microsoft.maui.essentials.ai']" name="managedName">Maui.Essentials.AI</attr>
+
+  <!-- Make all types internal by default -->
+  <attr path="//class[@visibility='public']" name="visibility">internal</attr>
+  <attr path="//interface[@visibility='public']" name="visibility">internal</attr>
+
+  <!-- Do not generate events -->
+  <attr path="//interface[@name='InferenceEnginePreparationListener']/method" name="eventName"></attr>
+  <attr path="//interface[@name='ContentGenerationListener']/method" name="eventName"></attr>
+  <attr path="//interface[@name='StreamContentGenerationListener']/method" name="eventName"></attr>
+
+</metadata>
