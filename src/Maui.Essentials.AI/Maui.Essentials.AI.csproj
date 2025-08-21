@@ -26,12 +26,8 @@
 	    <ProjectReference Include="..\Maui.Essentials.AI.Android\Maui.Essentials.AI.Android.csproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'macos' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
-		<ObjcBindingApiDefinition Include="Platforms/iOS/AppleIntelligenceApiDefinition.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'" />
-		<ObjcBindingApiDefinition Include="Platforms/MacCatalyst/AppleIntelligenceApiDefinition.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
-		<XcodeProject Include="../../Apple/Maui.Essentials.AI.xcodeproj">
-			<SchemeName>Maui.Essentials.AI</SchemeName>
-		</XcodeProject>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+	    <ProjectReference Include="..\Maui.Essentials.AI.Apple\Maui.Essentials.AI.Apple.csproj" />
 	</ItemGroup>
 
 </Project>
