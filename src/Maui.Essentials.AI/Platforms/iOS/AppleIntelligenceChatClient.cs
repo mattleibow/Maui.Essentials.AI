@@ -1,4 +1,4 @@
-﻿#if __IOS__ || __MACOS__ || __MACCATALYST__
+#if __IOS__ || __MACOS__ || __MACCATALYST__
 using Microsoft.Extensions.AI;
 using System.Runtime.CompilerServices;
 using Foundation;
@@ -172,12 +172,5 @@ public sealed class AppleIntelligenceChatClient : IChatClient
 
         GC.SuppressFinalize(this);
     }
-}
-#else
-namespace Maui.Essentials.AI;
-
-// All the code in this file is only included on Apple platforms.
-public class PlatformClass1
-{
 }
 #endif

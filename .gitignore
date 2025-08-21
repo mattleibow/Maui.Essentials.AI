@@ -397,6 +397,14 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+# Apple/Xcode build artifacts
+Apple/**/build/
+Apple/**/DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+.DS_Store
+
 # VS Code files for those working on multiple tools
 .vscode/*
 !.vscode/settings.json
