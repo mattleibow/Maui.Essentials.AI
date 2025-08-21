@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0-android</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>Maui.Essentials.AI</RootNamespace>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Xamarin.Google.AI.Edge.AICore" Version="0.0.1-exp02" />
+	    <AndroidGradleProject Include="..\Maui.Essentials.AI.Android.Native\build.gradle" ModuleName="maui.essentials.ai" />
+	</ItemGroup>
+
+</Project>
