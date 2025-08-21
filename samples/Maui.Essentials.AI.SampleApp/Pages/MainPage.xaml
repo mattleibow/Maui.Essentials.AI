@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Maui.Essentials.AI.SampleApp.ViewModels"
+             x:Class="Maui.Essentials.AI.SampleApp.Pages.MainPage"
+             x:Name="Page"
+             x:DataType="vm:ChatViewModel"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="&#10133;" Command="{Binding NewChatCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid Padding="16,40,16,16">
+        <Grid.Triggers>
+            <DataTrigger TargetType="Grid" Binding="{Binding HasStarted}" Value="True">
+                <Setter Property="Padding" Value="16,16,16,16" />
+            </DataTrigger>
+        </Grid.Triggers>
+
+        <!-- Landing State -->
+        <VerticalStackLayout
+            IsVisible="True"
+            Grid.Row="0"
+            Spacing="24"
+            VerticalOptions="Center"
+            HorizontalOptions="Fill">
+            <VerticalStackLayout.Triggers>
+                <DataTrigger TargetType="VerticalStackLayout" Binding="{Binding HasStarted}" Value="True">
+                    <Setter Property="IsVisible" Value="False" />
+                </DataTrigger>
+            </VerticalStackLayout.Triggers>
+
+            <!-- Header -->
+            <Label
+                Text="Nice to see you. What's new?"
+                FontSize="28"
+                FontAttributes="Bold"
+                MaximumWidthRequest="520"
+                Margin="0,0,0,16" />
+
+            <!-- Chat Input -->
+            <Entry
+                Placeholder="Message Copilot"
+                Text="{Binding Input}"
+                MaximumWidthRequest="520"
+                MaxLength="4000"
+                ReturnType="Send"
+                ReturnCommand="{Binding SendCommand}"/>
+            
+            <!-- Suggested Prompts -->
+            <CollectionView
+                ItemsSource="{Binding SuggestedPrompts}" 
+                SelectionMode="None"
+                MaximumWidthRequest="560"
+                HeightRequest="200">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout
+                        Orientation="Vertical"
+                        Span="2"
+                        HorizontalItemSpacing="12"
+                        VerticalItemSpacing="12"/>
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Border Padding="14,10" 
+                                Background="#F1EFEA" 
+                                StrokeShape="RoundRectangle 10"
+                                HorizontalOptions="Fill">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={x:Reference Page}, Path=BindingContext.UsePromptCommand}" 
+                                    CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding .}" 
+                                    HorizontalTextAlignment="Center"
+                                    VerticalTextAlignment="Center"
+                                    FontSize="14"/>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+
+        <!-- Chat State -->
+        <Grid IsVisible="False">
+            <Grid.Triggers>
+                <DataTrigger TargetType="Grid" Binding="{Binding HasStarted}" Value="True">
+                    <Setter Property="IsVisible" Value="True" />
+                </DataTrigger>
+            </Grid.Triggers>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Chat Messages -->
+            <CollectionView Grid.Row="0" ItemsSource="{Binding Messages}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ChatMessageViewModel">
+                        <Grid Padding="10,10,10,10">
+                            <Border
+                                Padding="12"
+                                StrokeShape="RoundRectangle 12"
+                                HorizontalOptions="Start"
+                                Background="#EFEFEF"
+                                Margin="0,0,40,0">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsUser}" Value="True">
+                                        <Setter Property="HorizontalOptions" Value="End"/>
+                                        <Setter Property="Background" Value="#DDEAFF"/>
+                                        <Setter Property="Margin" Value="40,0,0,0"/>
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsSystem}" Value="True">
+                                        <Setter Property="Background" Value="#FFE6E6"/>
+                                        <Setter Property="Margin" Value="0,0,40,0"/>
+                                    </DataTrigger>
+                                </Border.Triggers>
+
+                                <Label Text="{Binding Text, FallbackValue='[No content]'}" />
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Input Area -->
+            <Grid
+                Grid.Row="1"
+                Padding="0,8,0,0"
+                ColumnDefinitions="*,Auto"
+                ColumnSpacing="8">
+
+                <Entry Placeholder="Message" 
+                        Text="{Binding Input}" 
+                        ReturnType="Send" 
+                        ReturnCommand="{Binding SendCommand}"/>
+
+                <Button Grid.Column="1" 
+                        Command="{Binding SendCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsGenerating}" Value="True">
+                            <Setter Property="Text" Value="Generating..."/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsGenerating}" Value="False">
+                            <Setter Property="Text" Value="Send"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                
+            </Grid>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

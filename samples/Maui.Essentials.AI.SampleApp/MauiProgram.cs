@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Maui.Essentials.AI.SampleApp.Services;
 using Maui.Essentials.AI.SampleApp.ViewModels;
+using Maui.Essentials.AI.SampleApp.Pages;
+using Microsoft.Extensions.AI;
 
 namespace Maui.Essentials.AI.SampleApp;
 
@@ -18,9 +20,12 @@ public static class MauiProgram
 			});
 
 		// Services and VMs
-		builder.Services.AddSingleton<IChatService, EchoChatService>();
-		builder.Services.AddTransient<ChatViewModel>();
-		builder.Services.AddTransient<MainPage>();
+		builder.Services.AddSingleton<IChatClient, EchoChatClient>();
+		builder.Services.AddSingleton<ISettingsService, SettingsService>();
+		builder.Services.AddSingleton<ChatViewModel>();
+		builder.Services.AddSingleton<SettingsViewModel>();
+		builder.Services.AddSingleton<MainPage>();
+		builder.Services.AddSingleton<SettingsPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

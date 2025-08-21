@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Maui.Essentials.AI.SampleApp.ViewModels"
+             x:Class="Maui.Essentials.AI.SampleApp.Pages.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Header -->
+            <Label Text="Settings" 
+                   FontSize="32" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,10"/>
+
+            <!-- Streaming Section -->
+            <Border BackgroundColor="{DynamicResource Gray100}"
+                    Stroke="{DynamicResource Gray200}"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                
+                <VerticalStackLayout Padding="16" Spacing="12">
+                    <Label Text="Response Streaming" 
+                           FontSize="18" 
+                           FontAttributes="Bold"/>
+                    
+                    <HorizontalStackLayout Spacing="12">
+                        <Switch IsToggled="{Binding UseStreaming}" 
+                                VerticalOptions="Center"/>
+                        <VerticalStackLayout>
+                            <Label Text="Real-time Response" 
+                                   FontSize="16"/>
+                            <Label Text="See responses as they're generated in real-time" 
+                                   FontSize="12" 
+                                   TextColor="{DynamicResource Gray600}"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- System Message Section -->
+            <Border BackgroundColor="{DynamicResource Gray100}"
+                    Stroke="{DynamicResource Gray200}"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                
+                <VerticalStackLayout Padding="16" Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="System Message" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               Grid.Column="0"/>
+                        <Button Text="Reset" 
+                                Command="{Binding ResetSystemMessageCommand}"
+                                FontSize="12"
+                                Padding="8,4"
+                                BackgroundColor="Transparent"
+                                TextColor="{DynamicResource Primary}"
+                                Grid.Column="1"/>
+                    </Grid>
+                    
+                    <Label Text="Define how the AI should behave and respond" 
+                           FontSize="12" 
+                           TextColor="{DynamicResource Gray600}"
+                           Margin="0,0,0,8"/>
+                    
+                    <Editor Text="{Binding SystemMessage}"
+                            Placeholder="Enter system message..."
+                            AutoSize="TextChanges"
+                            MinimumHeightRequest="100"
+                            MaximumHeightRequest="200"
+                            BackgroundColor="{DynamicResource Gray50}"
+                            FontSize="14"/>
+                    
+                    <Label Text="Example: 'You are a helpful assistant that responds concisely and professionally.'" 
+                           FontSize="11" 
+                           TextColor="{DynamicResource Gray500}"/>
+                </VerticalStackLayout>
+            </Border>
+            
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
