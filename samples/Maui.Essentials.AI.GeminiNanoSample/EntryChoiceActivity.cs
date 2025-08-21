@@ -68,7 +68,7 @@ public class EntryChoiceActivity : AppCompatActivity
         model = new GenerativeModel(generationConfig, downloadConfig);
 
         try
-        {   
+        {
             await model.PrepareInferenceEngineAsync(this);
         }
         catch (GenerativeAIException e)

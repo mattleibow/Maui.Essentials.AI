@@ -1,5 +1,7 @@
 using Android.Text;
+using Android.Views;
 using AndroidX.AppCompat.App;
+using AndroidX.Core.View;
 using AndroidX.RecyclerView.Widget;
 using Google.AI.Edge.AICore;
 using System.Text;
@@ -10,7 +12,7 @@ namespace Maui.Essentials.AI.GeminiNanoSample;
 /// Demonstrates the AICore SDK usage from C#.
 /// </summary>
 [Activity(ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
-public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigUpdateListener
+public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigUpdateListener, IOnApplyWindowInsetsListener
 {
     private EditText requestEditText = null!;
     private Button sendButton = null!;
@@ -30,6 +32,9 @@ public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigU
         base.OnCreate(savedInstanceState);
 
         SetContentView(Resource.Layout.activity_main);
+
+        var root = FindViewById<LinearLayout>(Resource.Id.root_view)!;
+        ViewCompat.SetOnApplyWindowInsetsListener(root, this);
 
         requestEditText = FindViewById<EditText>(Resource.Id.request_edit_text)!;
         sendButton = FindViewById<Button>(Resource.Id.send_button)!;
@@ -153,7 +158,32 @@ public class MainActivity : AppCompatActivity, GenerationConfigDialog.IOnConfigU
     public void OnConfigUpdated()
     {
         model?.Close();
-        
+
         InitGenerativeModel();
+    }
+
+    public WindowInsetsCompat? OnApplyWindowInsets(View? view, WindowInsetsCompat? windowInsets)
+    {
+        var insets = windowInsets?.GetInsets(WindowInsetsCompat.Type.SystemBars());
+        if (view is not null && insets is not null)
+        {
+            // Apply the insets as a margin to the view. This solution sets only the
+            // bottom, left, and right dimensions, but you can apply whichever insets are
+            // appropriate to your layout. You can also update the view padding if that's
+            // more appropriate.
+            if (view.LayoutParameters is ViewGroup.MarginLayoutParams mlp)
+            {
+                mlp.LeftMargin = insets.Left;
+                mlp.TopMargin = insets.Top;
+                mlp.RightMargin = insets.Right;
+                mlp.BottomMargin = insets.Bottom;
+
+                view.LayoutParameters = mlp;
+            }
+        }
+
+        // Return CONSUMED if you don't want the window insets to keep passing
+        // down to descendant views.
+        return WindowInsetsCompat.Consumed;
     }
 }
