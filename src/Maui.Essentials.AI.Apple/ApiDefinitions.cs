@@ -27,12 +27,12 @@ namespace Maui.Essentials.AI
 		// -(instancetype _Nonnull)initWithInstructions:(NSString * _Nullable)instructions __attribute__((objc_designated_initializer));
 		[Export ("initWithInstructions:")]
 		[DesignatedInitializer]
-		NativeHandle Constructor([NullAllowed] string instructions);
+		NativeHandle Constructor ([NullAllowed] string instructions);
 
 		// -(instancetype _Nonnull)initWithModel:(SystemLanguageModel * _Nullable)model instructions:(NSString * _Nullable)instructions __attribute__((objc_designated_initializer));
 		[Export ("initWithModel:instructions:")]
 		[DesignatedInitializer]
-		NativeHandle Constructor([NullAllowed] SystemLanguageModel model, [NullAllowed] string instructions);
+		NativeHandle Constructor ([NullAllowed] SystemLanguageModel model, [NullAllowed] string instructions);
 
 		// @property (readonly, nonatomic) int isResponding;
 		[Export ("isResponding")]
@@ -41,7 +41,7 @@ namespace Maui.Essentials.AI
 		// -(void)respondTo:(NSString * _Nonnull)prompt onComplete:(void (^ _Nonnull)(LanguageModelSessionStringResponse * _Nullable, NSError * _Nullable))onComplete;
 		[Async]
 		[Export ("respondTo:onComplete:")]
-		void RespondTo(string prompt, Action<LanguageModelSessionStringResponse, NSError> onComplete);
+		void RespondTo (string prompt, Action<LanguageModelSessionStringResponse, NSError> onComplete);
 	}
 
 	// @interface SystemLanguageModel

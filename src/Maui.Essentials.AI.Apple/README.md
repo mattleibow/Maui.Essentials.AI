@@ -3,7 +3,7 @@
 To generate the API definitions files:
 
 ```
-dotnet build src/Maui.Essentials.AI.Apple -f net10.0-ios -bl
+dotnet build src/Maui.Essentials.AI.Apple -f net10.0-ios
 
 sharpie bind \
   --output=src/Maui.Essentials.AI.Apple \
