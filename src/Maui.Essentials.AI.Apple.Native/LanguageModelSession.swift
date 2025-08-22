@@ -14,7 +14,7 @@ import FoundationModels
 @objc(LanguageModelSession)
 public class LanguageModelSessionWrapper: NSObject {
 
-    let actual: LanguageModelSession?
+    let actual: LanguageModelSession
 
     @objc
     public override init() {
@@ -41,7 +41,7 @@ public class LanguageModelSessionWrapper: NSObject {
 
     @objc
     public var isResponding: Bool {
-        return actual!.isResponding
+        return actual.isResponding
     }
 
     @objc
@@ -51,45 +51,31 @@ public class LanguageModelSessionWrapper: NSObject {
             @escaping (LanguageModelSessionStringResponseWrapper?, NSError?) ->
             Void
     ) {
+        self.respond(to: prompt, options: nil, onComplete: onComplete)
+    }
+
+    @objc
+    public func respond(
+        to prompt: String,
+        options: GenerationOptionsWrapper?,
+        onComplete:
+            @escaping (LanguageModelSessionStringResponseWrapper?, NSError?) ->
+            Void
+    ) {
         Task.detached {
             do {
-                let response = try await self.actual!.respond(
+                let generationOptions = options?.actual ?? GenerationOptions()
+                let response = try await self.actual.respond(
                     to: prompt,
-                    options: GenerationOptions()
-                )  // TODO: expose GenerationOptions
-                let responseWrapper =
-                    LanguageModelSessionStringResponseWrapper.create(
-                        from: response
-                    )
-                onComplete(responseWrapper, nil)
+                    options: generationOptions
+                )
+                onComplete(.create(from: response), nil)
             } catch let error as LanguageModelSession.GenerationError {
-                let nserror = NSError(
-                    domain: "LanguageModelSessionErrorDomain",
-                    code: 0,
-                    userInfo: [
-                        NSUnderlyingErrorKey:
-                            error.errorDescription ?? "",
-                        NSLocalizedRecoverySuggestionErrorKey:
-                            error.recoverySuggestion ?? "",
-                        NSLocalizedFailureReasonErrorKey:
-                            error.failureReason ?? "",
-                        NSLocalizedDescriptionKey:
-                            error.localizedDescription,
-                    ]
-                )
-                onComplete(nil, nserror)
+                onComplete(nil, error.toNSError())
+            } catch let error as LanguageModelSession.ToolCallError {
+                onComplete(nil, error.toNSError())
             } catch {
-                // TODO: ToolCallError
-
-                let nserror = NSError(
-                    domain: "LanguageModelSessionErrorDomain",
-                    code: 0,
-                    userInfo: [
-                        NSLocalizedDescriptionKey:
-                            "Failed to respond to prompt: \(error.localizedDescription)"
-                    ]
-                )
-                onComplete(nil, nserror)
+                onComplete(nil, error.toNSError())
             }
         }
     }

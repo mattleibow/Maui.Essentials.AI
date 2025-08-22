@@ -11,6 +11,9 @@
 		347BAA922E57D60F00AA1478 /* LanguageModelSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA912E57D60F00AA1478 /* LanguageModelSession.swift */; };
 		347BAA942E57D6F600AA1478 /* LanguageModelSessionStringResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA932E57D6F600AA1478 /* LanguageModelSessionStringResponse.swift */; };
 		347BAA962E57D72200AA1478 /* SystemLanguageModelAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA952E57D72200AA1478 /* SystemLanguageModelAvailability.swift */; };
+		347BAA992E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA982E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift */; };
+		347BAA9A2E57ED3D00AA1478 /* GenerationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA972E57ED3D00AA1478 /* GenerationOptions.swift */; };
+		347BAA9C2E57F52500AA1478 /* ErrorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA9B2E57F52500AA1478 /* ErrorExtensions.swift */; };
 		83E34F572C21CB2B008AA950 /* MauiEssentialsAI.h in Headers */ = {isa = PBXBuildFile; fileRef = 83E34F562C21CB2B008AA950 /* MauiEssentialsAI.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
@@ -19,6 +22,9 @@
 		347BAA912E57D60F00AA1478 /* LanguageModelSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageModelSession.swift; sourceTree = "<group>"; };
 		347BAA932E57D6F600AA1478 /* LanguageModelSessionStringResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageModelSessionStringResponse.swift; sourceTree = "<group>"; };
 		347BAA952E57D72200AA1478 /* SystemLanguageModelAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemLanguageModelAvailability.swift; sourceTree = "<group>"; };
+		347BAA972E57ED3D00AA1478 /* GenerationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationOptions.swift; sourceTree = "<group>"; };
+		347BAA982E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationOptionsSamplingMode.swift; sourceTree = "<group>"; };
+		347BAA9B2E57F52500AA1478 /* ErrorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorExtensions.swift; sourceTree = "<group>"; };
 		83E34F532C21CB2B008AA950 /* MauiEssentialsAI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MauiEssentialsAI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		83E34F562C21CB2B008AA950 /* MauiEssentialsAI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MauiEssentialsAI.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -37,8 +43,11 @@
 		83E34F492C21CB2B008AA950 = {
 			isa = PBXGroup;
 			children = (
-				83E34F542C21CB2B008AA950 /* Products */,
 				83E34F562C21CB2B008AA950 /* MauiEssentialsAI.h */,
+				83E34F542C21CB2B008AA950 /* Products */,
+				347BAA9B2E57F52500AA1478 /* ErrorExtensions.swift */,
+				347BAA972E57ED3D00AA1478 /* GenerationOptions.swift */,
+				347BAA982E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift */,
 				347BAA912E57D60F00AA1478 /* LanguageModelSession.swift */,
 				347BAA932E57D6F600AA1478 /* LanguageModelSessionStringResponse.swift */,
 				347BAA8D2E57D5EF00AA1478 /* SystemLanguageModel.swift */,
@@ -136,8 +145,11 @@
 			files = (
 				347BAA8E2E57D5EF00AA1478 /* SystemLanguageModel.swift in Sources */,
 				347BAA962E57D72200AA1478 /* SystemLanguageModelAvailability.swift in Sources */,
+				347BAA9C2E57F52500AA1478 /* ErrorExtensions.swift in Sources */,
 				347BAA942E57D6F600AA1478 /* LanguageModelSessionStringResponse.swift in Sources */,
 				347BAA922E57D60F00AA1478 /* LanguageModelSession.swift in Sources */,
+				347BAA992E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift in Sources */,
+				347BAA9A2E57ED3D00AA1478 /* GenerationOptions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

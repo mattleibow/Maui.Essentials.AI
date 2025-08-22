@@ -11,6 +11,11 @@ class Testing
         if (OperatingSystem.IsIOSVersionAtLeast(26))
         {
             var av = SystemLanguageModel.Shared.IsAvailable;
+            new Maui.Essentials.AI.GenerationOptions(
+                sampling: Maui.Essentials.AI.GenerationOptionsSamplingMode.Greedy(),
+                temperature: 0.5,
+                maximumResponseTokens: 100);
+            new Maui.Essentials.AI.LanguageModelSession(SystemLanguageModel.Shared, "");
         }
     }
 }
