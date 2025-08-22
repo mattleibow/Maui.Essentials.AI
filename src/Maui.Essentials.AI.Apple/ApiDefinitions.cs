@@ -1,13 +1,12 @@
 using System;
 using Foundation;
+using MauiEssentialsAI;
 using ObjCRuntime;
 
 namespace Maui.Essentials.AI
 {
 	// @interface LanguageModelSessionStringResponse
-	[Introduced (PlatformName.iOS, 26,0)]
-	[Introduced (PlatformName.MacCatalyst, 26,0)]
-	[Introduced (PlatformName.MacOSX, 26,0)]
+	[NoWatch, NoTV, Mac (26,0), iOS (26,0)]
 	[DisableDefaultCtor]
 	interface LanguageModelSessionStringResponse
 	{
@@ -17,9 +16,7 @@ namespace Maui.Essentials.AI
 	}
 
 	// @interface LanguageModelSession
-	[Introduced (PlatformName.iOS, 26,0)]
-	[Introduced (PlatformName.MacCatalyst, 26,0)]
-	[Introduced (PlatformName.MacOSX, 26,0)]
+	[NoWatch, NoTV, Mac (26,0), iOS (26,0)]
 	interface LanguageModelSession
 	{
 		// -(instancetype _Nonnull)initWithInstructions:(NSString * _Nullable)instructions __attribute__((objc_designated_initializer));
@@ -37,15 +34,12 @@ namespace Maui.Essentials.AI
 		int IsResponding { get; }
 
 		// -(void)respondTo:(NSString * _Nonnull)prompt onComplete:(void (^ _Nonnull)(LanguageModelSessionStringResponse * _Nullable, NSError * _Nullable))onComplete;
-		[Async]
-		[Export("respondTo:onComplete:")]
+		[Export ("respondTo:onComplete:")]
 		void RespondTo (string prompt, Action<LanguageModelSessionStringResponse, NSError> onComplete);
 	}
 
 	// @interface SystemLanguageModel
-	[Introduced (PlatformName.iOS, 26,0)]
-	[Introduced (PlatformName.MacCatalyst, 26,0)]
-	[Introduced (PlatformName.MacOSX, 26,0)]
+	[NoWatch, NoTV, Mac (26,0), iOS (26,0)]
 	[DisableDefaultCtor]
 	interface SystemLanguageModel
 	{

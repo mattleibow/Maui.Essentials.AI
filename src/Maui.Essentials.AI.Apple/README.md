@@ -3,10 +3,6 @@
 To generate the API definitions files:
 
 ```
-sharpie xcode -sdks
-```
-
-```
 dotnet build src/Maui.Essentials.AI.Apple -f net10.0-ios -bl
 
 sharpie bind \

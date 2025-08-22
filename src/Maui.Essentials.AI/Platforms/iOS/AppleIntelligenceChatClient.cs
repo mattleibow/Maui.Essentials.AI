@@ -8,7 +8,10 @@ class Testing
 {
     void Test()
     {
-        var av = SystemLanguageModel.Shared.IsAvailable;
+        if (OperatingSystem.IsIOSVersionAtLeast(26))
+        {
+            var av = SystemLanguageModel.Shared.IsAvailable;
+        }
     }
 }
 
