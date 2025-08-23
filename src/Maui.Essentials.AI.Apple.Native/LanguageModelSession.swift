@@ -19,13 +19,11 @@ public class LanguageModelSessionWrapper: NSObject {
     @objc
     public override init() {
         actual = LanguageModelSession()
-        super.init()
     }
 
     @objc
     public init(instructions: String?) {
         actual = LanguageModelSession(instructions: instructions)
-        super.init()
     }
 
     @objc
@@ -36,7 +34,6 @@ public class LanguageModelSessionWrapper: NSObject {
             // TODO: tools: [],
             instructions: instructions
         )
-        super.init()
     }
 
     @objc
@@ -132,14 +129,9 @@ public class TranscriptWrapper: NSObject {
 
     let actual: Transcript
 
-    private override init() {
-        super.init()
-    }
-
     @objc
     public init(entries: [TranscriptEntryWrapper]) {
-        actual = Transcript(entries: entries)
-        super.init()
+        actual = Transcript(entries: entries.map { $0.actual })
     }
 
 }
@@ -151,13 +143,6 @@ public class TranscriptWrapper: NSObject {
 public class TranscriptEntryWrapper: NSObject {
 
     let actual: Transcript.Entry
-
-    @objc
-    public let id: String
-
-    private override init() {
-        super.init()
-    }
 
     @objc
     public init(instructions: TranscriptInstructionsWrapper) {
@@ -185,8 +170,23 @@ public class TranscriptInstructionsWrapper: NSObject {
     let actual: Transcript.Instructions
 
     @objc
+    public var id: String { actual.id }
+
+    @objc
+    public init(id: String, segments: [TranscriptSegmentWrapper]) {
+        actual = .init(
+            id: id,
+            segments: segments.map { $0.actual },
+            toolDefinitions: []  // TODO: expose tools
+        )
+    }
+
+    @objc
     public init(segments: [TranscriptSegmentWrapper]) {
-        super.init()
+        actual = .init(
+            segments: segments.map { $0.actual },
+            toolDefinitions: []  // TODO: expose tools
+        )
     }
 
 }
@@ -200,8 +200,34 @@ public class TranscriptPromptWrapper: NSObject {
     let actual: Transcript.Prompt
 
     @objc
+    public var id: String { actual.id }
+
+    let options: GenerationOptionsWrapper
+
+    @objc
+    public init(
+        id: String,
+        segments: [TranscriptSegmentWrapper],
+        options: GenerationOptionsWrapper? = nil
+            // TODO: responseFormat
+    ) {
+        self.options = options ?? GenerationOptionsWrapper()
+
+        actual = .init(
+            id: id,
+            segments: segments.map { $0.actual },
+            options: self.options.actual,
+            responseFormat: nil
+        )
+    }
+
+    @objc
     public init(segments: [TranscriptSegmentWrapper]) {
-        super.init()
+        options = GenerationOptionsWrapper()
+        actual = .init(
+            segments: segments.map { $0.actual },
+            options: options.actual
+        )
     }
 
 }
@@ -215,10 +241,31 @@ public class TranscriptResponseWrapper: NSObject {
     let actual: Transcript.Response
 
     @objc
-    public init(segments: [TranscriptSegmentWrapper]) {
-        super.init()
+    public var id: String { actual.id }
+
+    @objc
+    public var assetIDs: [String] { actual.assetIDs }
+
+    @objc
+    public init(
+        id: String,
+        assetIDs: [String],
+        segments: [TranscriptSegmentWrapper]
+    ) {
+        actual = .init(
+            id: id,
+            assetIDs: assetIDs,
+            segments: segments.map { $0.actual }
+        )
     }
 
+    @objc
+    public init(segments: [TranscriptSegmentWrapper]) {
+        actual = .init(
+            assetIDs: [],
+            segments: segments.map { $0.actual }
+        )
+    }
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -227,7 +274,7 @@ public class TranscriptResponseWrapper: NSObject {
 @objc(TranscriptSegment)
 public class TranscriptSegmentWrapper: NSObject {
 
-    let actual: Transcript.Prompt
+    let actual: Transcript.Segment
 
     @objc
     public init(segments: [TranscriptSegmentWrapper]) {
