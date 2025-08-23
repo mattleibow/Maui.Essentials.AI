@@ -80,4 +80,46 @@ public class LanguageModelSessionWrapper: NSObject {
         }
     }
 
+    @objc
+    public func streamResponse(
+        to prompt: String,
+        onNext: @escaping (String) -> Void,
+        onComplete:
+            @escaping (LanguageModelSessionStringResponseWrapper?, NSError?) ->
+            Void
+    ) {
+        self.respond(to: prompt, options: nil, onComplete: onComplete)
+    }
+
+    @objc
+    public func streamResponse(
+        to prompt: String,
+        options: GenerationOptionsWrapper?,
+        onNext: @escaping (String) -> Void,
+        onComplete:
+            @escaping (LanguageModelSessionStringResponseWrapper?, NSError?) ->
+            Void
+    ) {
+        Task.detached {
+            do {
+                let generationOptions = options?.actual ?? GenerationOptions()
+                let stream = self.actual.streamResponse(
+                    to: prompt,
+                    options: generationOptions
+                )
+                for try await partial in stream {
+                    onNext(partial)
+                }
+                let response = try await stream.collect()
+                onComplete(.create(from: response), nil)
+            } catch let error as LanguageModelSession.GenerationError {
+                onComplete(nil, error.toNSError())
+            } catch let error as LanguageModelSession.ToolCallError {
+                onComplete(nil, error.toNSError())
+            } catch {
+                onComplete(nil, error.toNSError())
+            }
+        }
+    }
+
 }

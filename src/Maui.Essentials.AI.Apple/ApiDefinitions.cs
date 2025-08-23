@@ -100,12 +100,20 @@ namespace Maui.Essentials.AI
 		// -(void)respondTo:(NSString * _Nonnull)prompt onComplete:(void (^ _Nonnull)(LanguageModelSessionStringResponse * _Nullable, NSError * _Nullable))onComplete;
 		[Async]
 		[Export ("respondTo:onComplete:")]
-		void RespondTo (string prompt, Action<LanguageModelSessionStringResponse, NSError> onComplete);
+		void Respond (string prompt, Action<LanguageModelSessionStringResponse, NSError> onComplete);
 
 		// -(void)respondTo:(NSString * _Nonnull)prompt options:(GenerationOptions * _Nullable)options onComplete:(void (^ _Nonnull)(LanguageModelSessionStringResponse * _Nullable, NSError * _Nullable))onComplete;
 		[Async]
 		[Export ("respondTo:options:onComplete:")]
-		void RespondTo (string prompt, [NullAllowed] GenerationOptions options, Action<LanguageModelSessionStringResponse, NSError> onComplete);
+		void Respond (string prompt, [NullAllowed] GenerationOptions options, Action<LanguageModelSessionStringResponse, NSError> onComplete);
+
+		// -(void)streamResponseTo:(NSString * _Nonnull)prompt onNext:(void (^ _Nonnull)(NSString * _Nonnull))onNext onComplete:(void (^ _Nonnull)(LanguageModelSessionStringResponse * _Nullable, NSError * _Nullable))onComplete;
+		[Export ("streamResponseTo:onNext:onComplete:")]
+		void StreamResponse (string prompt, Action<string> onNext, Action<LanguageModelSessionStringResponse, NSError> onComplete);
+
+		// -(void)streamResponseTo:(NSString * _Nonnull)prompt options:(GenerationOptions * _Nullable)options onNext:(void (^ _Nonnull)(NSString * _Nonnull))onNext onComplete:(void (^ _Nonnull)(LanguageModelSessionStringResponse * _Nullable, NSError * _Nullable))onComplete;
+		[Export ("streamResponseTo:options:onNext:onComplete:")]
+		void StreamResponse (string prompt, [NullAllowed] GenerationOptions options, Action<string> onNext, Action<LanguageModelSessionStringResponse, NSError> onComplete);
 	}
 
 	// @interface SystemLanguageModel
