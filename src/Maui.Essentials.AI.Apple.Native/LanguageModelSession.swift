@@ -123,3 +123,180 @@ public class LanguageModelSessionWrapper: NSObject {
     }
 
 }
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+@objc(Transcript)
+public class TranscriptWrapper: NSObject {
+
+    let actual: Transcript
+
+    private override init() {
+        super.init()
+    }
+
+    @objc
+    public init(entries: [TranscriptEntryWrapper]) {
+        actual = Transcript(entries: entries)
+        super.init()
+    }
+
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+@objc(TranscriptEntry)
+public class TranscriptEntryWrapper: NSObject {
+
+    let actual: Transcript.Entry
+
+    @objc
+    public let id: String
+
+    private override init() {
+        super.init()
+    }
+
+    @objc
+    public init(instructions: TranscriptInstructionsWrapper) {
+        actual = .instructions(instructions.actual)
+    }
+
+    @objc
+    public init(prompt: TranscriptPromptWrapper) {
+        actual = .prompt(prompt.actual)
+    }
+
+    @objc
+    public init(response: TranscriptResponseWrapper) {
+        actual = .response(response.actual)
+    }
+
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+@objc(TranscriptInstructions)
+public class TranscriptInstructionsWrapper: NSObject {
+
+    let actual: Transcript.Instructions
+
+    @objc
+    public init(segments: [TranscriptSegmentWrapper]) {
+        super.init()
+    }
+
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+@objc(TranscriptPrompt)
+public class TranscriptPromptWrapper: NSObject {
+
+    let actual: Transcript.Prompt
+
+    @objc
+    public init(segments: [TranscriptSegmentWrapper]) {
+        super.init()
+    }
+
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+@objc(TranscriptResponse)
+public class TranscriptResponseWrapper: NSObject {
+
+    let actual: Transcript.Response
+
+    @objc
+    public init(segments: [TranscriptSegmentWrapper]) {
+        super.init()
+    }
+
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+@objc(TranscriptSegment)
+public class TranscriptSegmentWrapper: NSObject {
+
+    let actual: Transcript.Prompt
+
+    @objc
+    public init(segments: [TranscriptSegmentWrapper]) {
+        super.init()
+    }
+
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+class TEST2 {
+    func TEST() async {
+        let wrapper = TranscriptWrapper(entries: [
+            .init(instructions: TranscriptInstructionsWrapper(segments: [])),
+            .init(prompt: TranscriptPromptWrapper(segments: [])),
+            .init(response: TranscriptResponseWrapper(segments: [])),
+        ])
+
+        let resp = try! await LanguageModelSession(transcript: wrapper.actual)
+            .respond(to: "Hello")
+        print(resp.content)
+    }
+}
+
+//class TEST {
+//
+//    func convertMessagesToTranscript(_ messages: [ChatMessage]) -> [Transcript
+//        .Entry]
+//    {
+//        var entries: [Transcript.Entry] = []
+//
+//        // Process all messages in order
+//        for message in messages {
+//            let textSegment = Transcript.TextSegment(content: message.content)
+//
+//            switch message.role.lowercased() {
+//            case "system":
+//                // Convert system messages to instructions
+//                let instructions = Transcript.Instructions(
+//                    segments: [.text(textSegment)],
+//                    toolDefinitions: []
+//                )
+//                entries.append(.instructions(instructions))
+//
+//            case "user":
+//                // Convert user messages to prompts
+//                let prompt = Transcript.Prompt(
+//                    segments: [.text(textSegment)]
+//                )
+//                entries.append(.prompt(prompt))
+//
+//            case "assistant":
+//                // Convert assistant messages to responses
+//                let response = Transcript.Response(
+//                    assetIDs: [],
+//                    segments: [.text(textSegment)]
+//                )
+//                entries.append(.response(response))
+//
+//            default:
+//                // Treat unknown roles as user messages
+//                let prompt = Transcript.Prompt(
+//                    segments: [.text(textSegment)]
+//                )
+//                entries.append(.prompt(prompt))
+//            }
+//        }
+//
+//        return entries
+//    }
+//}

@@ -4,7 +4,7 @@
     <TargetFrameworks>net10.0-ios;net10.0-maccatalyst;net10.0-macos</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>true</ImplicitUsings>
-    <IsBindingProject>true</IsBindingProject>
+    <!-- <IsBindingProject>true</IsBindingProject> -->
 
     <!--
       Enable trim analyzers for class libraries.
