@@ -40,28 +40,20 @@ public sealed class AICoreChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        try
+        await PrepareInferenceEngineAsync(cancellationToken);
+
+        var contents = ConvertToContent(chatMessages).ToArray();
+
+        var response = await _model.GenerateContentAsync(cancellationToken, contents);
+
+        var textContent = ConvertToTextContent(response);
+
+        return new ChatResponse()
         {
-            await PrepareInferenceEngineAsync(cancellationToken);
-
-            var contents = ConvertToContent(chatMessages).ToArray();
-
-            var response = await _model.GenerateContentAsync(cancellationToken, contents);
-
-            var textContent = ConvertToTextContent(response);
-
-            return new ChatResponse()
-            {
-                Messages = { new ChatMessage(ChatRole.Assistant, [textContent]) },
-                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-                FinishReason = ChatFinishReason.Stop
-            };
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            // Convert to a more appropriate exception type if needed
-            throw new InvalidOperationException($"Error generating content: {ex.Message}", ex);
-        }
+            Messages = { new ChatMessage(ChatRole.Assistant, [textContent]) },
+            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
+            FinishReason = ChatFinishReason.Stop
+        };
     }
 
     /// <summary>

@@ -45,48 +45,128 @@ public sealed class AppleIntelligenceChatClient : IChatClient
 
         EnsureModelAvailability();
 
-        try
+        var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
+        var session = CreateSession(history);
+
+        var prompt = GetPrompt(lastMessage);
+        var generationOptions = CreateGenerationOptions(options);
+
+        var response = await session.RespondAsync(prompt, generationOptions);
+
+        return new ChatResponse
         {
-            var messages = chatMessages.ToList();
+            Messages = { new ChatMessage(ChatRole.Assistant, response.Content) },
+            ModelId = _metadata.DefaultModelId,
+            CreatedAt = DateTimeOffset.Now,
+            FinishReason = ChatFinishReason.Stop
+        };
+    }
 
-            // Extract the last message as the prompt
-            var lastMessage = messages.LastOrDefault() ?? throw new InvalidOperationException("No messages available.");
-            messages.RemoveAt(messages.Count - 1);
+    /// <summary>
+    /// Gets streaming chat completion updates from Apple Intelligence
+    /// Note: Apple Intelligence doesn't support streaming, so this simulates streaming by yielding the complete response
+    /// </summary>
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        IEnumerable<ChatMessage> chatMessages,
+        ChatOptions? options = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
-            // Add system instructions if provided
-            if (options?.Instructions is not null)
-                messages.Insert(0, new ChatMessage(ChatRole.System, options.Instructions));
+        EnsureModelAvailability();
 
-            // Convert chat messages to transcript
-            var transcript = ConvertToTranscript(chatMessages);
+        var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
+        var session = CreateSession(history);
 
-            // Start a session by rehydrating from a transcript
-            var session = new LanguageModelSession(_model, transcript);
+        var prompt = GetPrompt(lastMessage);
+        var generationOptions = CreateGenerationOptions(options);
 
-            // Configure generation options
-            var sampling = options?.TopK is int topK
-                ? GenerationOptionsSamplingMode.Random(topK: topK, seed: options.Seed)
-                : null;
-            var generationOptions = new GenerationOptions(
-                sampling: sampling,
-                temperature: options?.Temperature,
-                maximumResponseTokens: options?.MaxOutputTokens);
+        await foreach (var response in session.StreamResponseAsync(prompt, generationOptions, cancellationToken))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
-            // Request a response from the model
-            var response = await session.RespondAsync(GetPrompt(lastMessage), generationOptions);
+            if (string.IsNullOrEmpty(response))
+                continue;
 
-            return new ChatResponse
+            yield return new ChatResponseUpdate
             {
-                Messages = { new ChatMessage(ChatRole.Assistant, response.Content) },
-                ModelId = _metadata.DefaultModelId,
-                CreatedAt = DateTimeOffset.Now,
-                FinishReason = ChatFinishReason.Stop
+                Contents = [new TextContent(response)],
+                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
+                Role = ChatRole.Assistant
             };
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+
+        // Final update to indicate completion
+        yield return new ChatResponseUpdate
         {
-            throw new InvalidOperationException($"Error generating content with Apple Intelligence: {ex.Message}", ex);
-        }
+            FinishReason = ChatFinishReason.Stop,
+            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
+            Role = ChatRole.Assistant
+        };
+    }
+
+    /// <summary>
+    /// Gets a service instance from the client
+    /// </summary>
+    object? IChatClient.GetService(Type serviceType, object? serviceKey)
+    {
+        ArgumentNullException.ThrowIfNull(serviceType);
+
+        return
+            serviceKey is not null ? null :
+            serviceType == typeof(ChatClientMetadata) ? _metadata :
+            serviceType.IsInstanceOfType(this) ? this :
+            null;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        GC.SuppressFinalize(this);
+    }
+
+    private static GenerationOptions CreateGenerationOptions(ChatOptions? options)
+    {
+        var sampling = options?.TopK is int topK
+            ? GenerationOptionsSamplingMode.Random(topK: topK, seed: options.Seed)
+            : null;
+
+        var generationOptions = new GenerationOptions(
+            sampling: sampling,
+            temperature: options?.Temperature,
+            maximumResponseTokens: options?.MaxOutputTokens);
+
+        return generationOptions;
+    }
+
+    private LanguageModelSession CreateSession(List<ChatMessage> history)
+    {
+        // Convert chat messages to transcript
+        var transcript = ConvertToTranscript(history);
+
+        // Start a session by rehydrating from a transcript
+        var session = new LanguageModelSession(_model, transcript);
+
+        return session;
+    }
+
+    private static (List<ChatMessage> History, ChatMessage Prompt) NormalizeChatMessages(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null)
+    {
+        var messages = chatMessages.ToList();
+
+        // Extract the last message as the prompt
+        var lastMessage = messages.LastOrDefault() ?? throw new InvalidOperationException("No messages available.");
+        messages.RemoveAt(messages.Count - 1);
+
+        // Add system instructions if provided
+        if (options?.Instructions is not null)
+            messages.Insert(0, new ChatMessage(ChatRole.System, options.Instructions));
+
+        return (messages, lastMessage);
     }
 
     private static Transcript ConvertToTranscript(IEnumerable<ChatMessage> chatMessages)
@@ -143,65 +223,5 @@ public sealed class AppleIntelligenceChatClient : IChatClient
             default:
                 throw new InvalidOperationException("Apple Intelligence is unavailable.");
         }
-    }
-
-    /// <summary>
-    /// Gets streaming chat completion updates from Apple Intelligence
-    /// Note: Apple Intelligence doesn't support streaming, so this simulates streaming by yielding the complete response
-    /// </summary>
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        IEnumerable<ChatMessage> chatMessages,
-        ChatOptions? options = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Streaming is not implemented yet.");
-
-        // ObjectDisposedException.ThrowIf(_disposed, this);
-
-        // var prompt = BuildPromptFromMessages(chatMessages);
-        // var response = await GetIntelligenceResponseAsync(prompt, cancellationToken);
-
-        // // Since Apple Intelligence doesn't support true streaming, we yield the complete response
-        // if (!string.IsNullOrEmpty(response))
-        // {
-        //     yield return new ChatResponseUpdate
-        //     {
-        //         Contents = [new TextContent(response)],
-        //         ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-        //         Role = ChatRole.Assistant
-        //     };
-        // }
-
-        // // Final update to indicate completion
-        // yield return new ChatResponseUpdate
-        // {
-        //     FinishReason = ChatFinishReason.Stop,
-        //     ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-        //     Role = ChatRole.Assistant
-        // };
-    }
-
-    /// <summary>
-    /// Gets a service instance from the client
-    /// </summary>
-    object? IChatClient.GetService(Type serviceType, object? serviceKey)
-    {
-        ArgumentNullException.ThrowIfNull(serviceType);
-
-        return
-            serviceKey is not null ? null :
-            serviceType == typeof(ChatClientMetadata) ? _metadata :
-            serviceType.IsInstanceOfType(this) ? this :
-            null;
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
     }
 }
