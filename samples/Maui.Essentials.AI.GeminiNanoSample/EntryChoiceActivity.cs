@@ -2,6 +2,7 @@ using Android.Content;
 using Android.Views;
 using AndroidX.AppCompat.App;
 using Google.AI.Edge.AICore;
+using Microsoft.Extensions.AI.Google.AICore;
 
 namespace Maui.Essentials.AI.GeminiNanoSample;
 

@@ -27,10 +27,9 @@ var response = await _aiService.ChatAsync("Summarize this document");
 Our revolutionary approach ensures your app always has AI capabilities while keeping everything on-device:
 
 1. **🏠 On-Device First** - Leverage native, OS-provided models
-   - iOS: Foundation Models & Core ML
-   - Android: Google AI Edge, TensorFlow Lite
-   - Windows: Phi Silica, DirectML, ONNX Runtime
-   - macOS: Core ML, Metal Performance Shaders
+   - **iOS/macOS/Mac Catalyst**: Apple Intelligence (iOS 18.1+, macOS 15.1+)
+   - **Android**: Google AI Edge (Gemini Nano), TensorFlow Lite
+   - **Windows**: Phi Silica, DirectML, ONNX Runtime
 
 2. **📦 Custom Models** - Your own trained models
    - Core ML integration
@@ -138,9 +137,16 @@ var sentiment = await _aiService.AnalyzeSentimentAsync(userReview);
 
 ### Platform-Specific Optimizations
 ```csharp
-#if IOS
-// Leverage iOS-specific Foundation models
-builder.Services.AddFoundationModels();
+#if IOS || MACCATALYST || MACOS
+// Leverage Apple Intelligence (iOS 18.1+, macOS 15.1+)
+using var client = new AppleIntelligenceChatClient(
+    instructions: "You are a helpful assistant",
+    modelId: "Apple-Intelligence");
+
+if (AppleIntelligenceChatClient.IsAppleIntelligenceAvailable)
+{
+    var response = await client.GetResponseAsync(messages);
+}
 #elif ANDROID  
 // Use Google AI Edge on Android
 builder.Services.AddGoogleAIEdge();
@@ -150,14 +156,45 @@ builder.Services.AddPhiSilica();
 #endif
 ```
 
+### Direct Apple Intelligence Usage
+```csharp
+// Create an Apple Intelligence chat client
+using var client = new AppleIntelligenceChatClient(
+    instructions: "You are a helpful AI assistant for mobile apps. Keep responses concise.",
+    modelId: "Apple-Intelligence-1.0");
+
+// Check availability
+if (AppleIntelligenceChatClient.IsAppleIntelligenceAvailable)
+{
+    var messages = new[]
+    {
+        new ChatMessage(ChatRole.User, "What's the weather like?")
+    };
+
+    // Get a response
+    var response = await client.GetResponseAsync(messages);
+    Console.WriteLine(response.Messages.First().Text);
+
+    // Or use streaming
+    await foreach (var update in client.GetStreamingResponseAsync(messages))
+    {
+        if (update.Contents?.Count > 0)
+        {
+            Console.Write(update.Contents[0].Text);
+        }
+    }
+}
+```
+
 ## 🎯 Supported Platforms
 
 | Platform | On-Device Models | Custom Models |
 |----------|------------------|---------------|
-| **iOS** | ✅ Foundation Models, Core ML | ✅ Core ML, ONNX |
+| **iOS** | ✅ Apple Intelligence (iOS 18.1+), Core ML | ✅ Core ML, ONNX |
 | **Android** | ✅ Google AI Edge, TF Lite | ✅ TensorFlow Lite, ONNX |
 | **Windows** | ✅ Phi Silica, DirectML | ✅ ONNX Runtime, DirectML |
-| **macOS** | ✅ Core ML, Metal | ✅ Core ML, ONNX |
+| **macOS** | ✅ Apple Intelligence (macOS 15.1+), Core ML | ✅ Core ML, ONNX |
+| **Mac Catalyst** | ✅ Apple Intelligence, Core ML | ✅ Core ML, ONNX |
 
 ## 📚 Documentation & Resources
 
