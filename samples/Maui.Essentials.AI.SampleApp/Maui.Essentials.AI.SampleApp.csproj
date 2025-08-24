@@ -70,4 +70,8 @@
 		<ProjectReference Include="../../src/Maui.Essentials.AI/Maui.Essentials.AI.csproj" />
 	</ItemGroup>
 
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<ProjectReference Include="../../src/Microsoft.Extensions.AI.Microsoft.PhiSilica/Microsoft.Extensions.AI.Microsoft.PhiSilica.csproj" />
+	</ItemGroup>
+
 </Project>

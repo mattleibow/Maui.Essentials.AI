@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,10 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Maui.Essentials.AI/Maui.Essentials.AI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <ProjectReference Include="../../src/Microsoft.Extensions.AI.Microsoft.PhiSilica/Microsoft.Extensions.AI.Microsoft.PhiSilica.csproj" />
   </ItemGroup>
 
   <ItemGroup>
