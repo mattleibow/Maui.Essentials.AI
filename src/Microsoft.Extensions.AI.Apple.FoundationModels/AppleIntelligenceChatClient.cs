@@ -81,6 +81,7 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         var prompt = GetPrompt(lastMessage);
         var generationOptions = CreateGenerationOptions(options);
 
+        var lastResponse = "";
         await foreach (var response in session.StreamResponseAsync(prompt, generationOptions, cancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -88,9 +89,14 @@ public sealed class AppleIntelligenceChatClient : IChatClient
             if (string.IsNullOrEmpty(response))
                 continue;
 
+            // Get the new content generated since the last response
+            // The Apple models return the full response each time
+            var updateResponse = response.Substring(lastResponse.Length);
+            lastResponse = response;
+
             yield return new ChatResponseUpdate
             {
-                Contents = [new TextContent(response)],
+                Contents = [new TextContent(updateResponse)],
                 ModelId = options?.ModelId ?? _metadata.DefaultModelId,
                 Role = ChatRole.Assistant
             };
