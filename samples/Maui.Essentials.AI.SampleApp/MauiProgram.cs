@@ -25,6 +25,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IChatClient, Microsoft.Extensions.AI.Apple.FoundationModels.AppleIntelligenceChatClient>();
 #elif ANDROID
 		builder.Services.AddSingleton<IChatClient, Microsoft.Extensions.AI.Google.AICore.AICoreChatClient>();
+#elif WINDOWS
+		builder.Services.AddSingleton<IChatClient, Microsoft.Extensions.AI.Microsoft.PhiSilica.PhiSilicaChatClient>();
 #else
 		builder.Services.AddSingleton<IChatClient, EchoChatClient>();
 #endif
