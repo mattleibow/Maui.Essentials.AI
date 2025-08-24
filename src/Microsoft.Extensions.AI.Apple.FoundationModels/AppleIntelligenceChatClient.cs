@@ -75,14 +75,13 @@ public sealed class AppleIntelligenceChatClient : IChatClient
             // Request a response from the model
             var response = await session.RespondAsync(GetPrompt(lastMessage), generationOptions);
 
-            // return new ChatResponse
-            // {
-            //     Messages = { new ChatMessage(ChatRole.Assistant, response) },
-            //     ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-            //     FinishReason = ChatFinishReason.Stop
-            // };
-
-            throw new NotImplementedException();
+            return new ChatResponse
+            {
+                Messages = { new ChatMessage(ChatRole.Assistant, response.Content) },
+                ModelId = _metadata.DefaultModelId,
+                CreatedAt = DateTimeOffset.Now,
+                FinishReason = ChatFinishReason.Stop
+            };
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -150,7 +149,7 @@ public sealed class AppleIntelligenceChatClient : IChatClient
     /// Gets streaming chat completion updates from Apple Intelligence
     /// Note: Apple Intelligence doesn't support streaming, so this simulates streaming by yielding the complete response
     /// </summary>
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -202,8 +201,6 @@ public sealed class AppleIntelligenceChatClient : IChatClient
             return;
 
         _disposed = true;
-
-        _session?.Dispose();
 
         GC.SuppressFinalize(this);
     }
