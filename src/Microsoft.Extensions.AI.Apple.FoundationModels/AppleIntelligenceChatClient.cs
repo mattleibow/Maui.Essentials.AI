@@ -177,13 +177,13 @@ public sealed class AppleIntelligenceChatClient : IChatClient
 
     private static Transcript ConvertToTranscript(IEnumerable<ChatMessage> chatMessages)
     {
-        var entries = chatMessages.Select(GetTranscriptEntry).ToArray();
+        var entries = chatMessages.Select(ConvertToTranscriptEntry).ToArray();
         return new Transcript(entries);
     }
 
-    private static TranscriptEntry GetTranscriptEntry(ChatMessage chatMessage)
+    private static TranscriptEntry ConvertToTranscriptEntry(ChatMessage chatMessage)
     {
-        var segments = chatMessage.Contents.Select(GetTranscriptSegment).ToArray();
+        var segments = chatMessage.Contents.Select(ConvertTranscriptSegment).ToArray();
 
         if (chatMessage.Role == ChatRole.User)
             return new TranscriptEntry(new TranscriptPrompt(segments));
@@ -197,7 +197,7 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         throw new ArgumentOutOfRangeException(nameof(chatMessage.Role), $"Unknown chat role: {chatMessage.Role}");
     }
 
-    private static TranscriptSegment GetTranscriptSegment(AIContent content)
+    private static TranscriptSegment ConvertTranscriptSegment(AIContent content)
     {
         if (content is TextContent textContent)
             return new TranscriptSegment(new TranscriptTextSegment(textContent.Text));

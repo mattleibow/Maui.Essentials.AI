@@ -9,7 +9,6 @@ namespace Microsoft.Extensions.AI.Google.AICore;
 /// </summary>
 public sealed class AICoreChatClient : IChatClient
 {
-    private readonly GenerativeModel _model;
     private readonly ChatClientMetadata _metadata;
 
     private bool _disposed;
@@ -19,15 +18,11 @@ public sealed class AICoreChatClient : IChatClient
     /// <summary>
     /// Creates a new AICoreChatClient instance
     /// </summary>
-    /// <param name="model">The GenerativeModel instance to use</param>
-    /// <param name="modelId">ID of the model for responses</param>
-    public AICoreChatClient(GenerativeModel model, string? modelId = null)
+    public AICoreChatClient()
     {
-        _model = model ?? throw new ArgumentNullException(nameof(model));
-
         _metadata = new ChatClientMetadata(
             providerName: "Google AI Edge AICore",
-            defaultModelId: modelId ?? "Gemini-Nano");
+            defaultModelId: "Gemini-Nano");
     }
 
     /// <summary>
@@ -40,17 +35,17 @@ public sealed class AICoreChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        await PrepareInferenceEngineAsync(cancellationToken);
+        var model = await CreateModel(options, cancellationToken);
 
-        var contents = ConvertToContent(chatMessages).ToArray();
+        var contents = ConvertToContent(chatMessages);
 
-        var response = await _model.GenerateContentAsync(cancellationToken, contents);
+        var response = await model.GenerateContentAsync(cancellationToken, contents);
 
-        var textContent = ConvertToTextContent(response);
+        var aiContents = ConvertToAIContent(response);
 
         return new ChatResponse()
         {
-            Messages = { new ChatMessage(ChatRole.Assistant, [textContent]) },
+            Messages = { new ChatMessage(ChatRole.Assistant, aiContents) },
             ModelId = options?.ModelId ?? _metadata.DefaultModelId,
             FinishReason = ChatFinishReason.Stop
         };
@@ -66,22 +61,19 @@ public sealed class AICoreChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        await PrepareInferenceEngineAsync(cancellationToken);
+        var model = await CreateModel(options, cancellationToken);
 
-        var contents = ConvertToContent(chatMessages).ToArray();
+        var contents = ConvertToContent(chatMessages);
 
-        await foreach (var response in _model.GenerateContentStreamAsync(cancellationToken, contents))
+        await foreach (var response in model.GenerateContentStreamAsync(cancellationToken, contents))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var textContent = ConvertToTextContent(response);
-
-            if (string.IsNullOrEmpty(textContent.Text))
-                continue;
+            var aiContents = ConvertToAIContent(response);
 
             yield return new ChatResponseUpdate
             {
-                Contents = [textContent],
+                Contents = aiContents,
                 ModelId = options?.ModelId ?? _metadata.DefaultModelId,
                 Role = ChatRole.Assistant
             };
@@ -94,15 +86,6 @@ public sealed class AICoreChatClient : IChatClient
             ModelId = options?.ModelId ?? _metadata.DefaultModelId,
             Role = ChatRole.Assistant
         };
-    }
-
-    /// <summary>
-    /// Prepare the inference engine for faster responses
-    /// </summary>
-    public async Task PrepareInferenceEngineAsync(CancellationToken cancellationToken = default)
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        await _model.PrepareInferenceEngineAsync(cancellationToken);
     }
 
     /// <summary>
@@ -119,28 +102,65 @@ public sealed class AICoreChatClient : IChatClient
             null;
     }
 
-    private static IEnumerable<Content> ConvertToContent(IEnumerable<ChatMessage> chatMessages)
+    private static async Task<GenerativeModel> CreateModel(ChatOptions? options, CancellationToken cancellationToken)
     {
-        foreach (var message in chatMessages)
+        var config = new GenerationConfig.Builder()
         {
-            if (!string.IsNullOrEmpty(message.Text))
-            {
-                yield return ConvertToContent(message);
-            }
-        }
+            Context = global::Android.App.Application.Context,
+            MaxOutputTokens = options?.MaxOutputTokens is int maxTokens
+                ? Java.Lang.Integer.ValueOf(maxTokens)
+                : null,
+            Temperature = options?.Temperature is float temperature
+                ? Java.Lang.Float.ValueOf(temperature)
+                : null,
+            TopK = options?.TopK is int topK
+                ? Java.Lang.Integer.ValueOf(topK)
+                : null
+        }.Build();
+
+        // TODO: handle the download callback
+
+        var model = new GenerativeModel(config);
+
+        await model.PrepareInferenceEngineAsync(cancellationToken);
+
+        return model;
     }
 
-    private static Content ConvertToContent(ChatMessage message) =>
-        new Content.Builder()
-            .AddText(message.Text)
-            .SetRole(ConvertToContentRole(message.Role))
+    private static Content[] ConvertToContent(IEnumerable<ChatMessage> chatMessages)
+    {
+        var contents = chatMessages.Select(ConvertToContent).ToArray();
+
+        return contents;
+    }
+
+    private static Content ConvertToContent(ChatMessage chatMessage)
+    {
+        var parts = chatMessage.Contents.Select(ConvertToPart).ToArray();
+
+        var content = new Content.Builder()
+            .SetRole(ConvertToContentRole(chatMessage.Role))
+            .SetParts(parts)
             .Build();
+
+        return content;
+    }
+
+    private static IPart ConvertToPart(AIContent content)
+    {
+        if (content is TextContent textContent)
+            return new TextPart(textContent.Text);
+
+        // TODO: handle other content types
+        throw new ArgumentOutOfRangeException(nameof(content), $"Unsupported content type: {content.GetType().Name}");
+    }
 
     private static ContentRole ConvertToContentRole(ChatRole role) =>
         role == ChatRole.User ? ContentRole.User : ContentRole.Model;
 
-    private static TextContent ConvertToTextContent(GenerateContentResponse response) =>
-        new TextContent(response.Text ?? string.Empty);
+    private static AIContent[] ConvertToAIContent(GenerateContentResponse response) =>
+        // TODO: handle message parts correctly
+        [new TextContent(response.Text ?? string.Empty)];
 
     public void Dispose()
     {
@@ -148,8 +168,6 @@ public sealed class AICoreChatClient : IChatClient
             return;
 
         _disposed = true;
-
-        _model?.Close();
 
         GC.SuppressFinalize(this);
     }
