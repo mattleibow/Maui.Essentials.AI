@@ -24,7 +24,7 @@ public static class MauiProgram
 #if IOS || MACCATALYST
 		builder.Services.AddSingleton<IChatClient, Microsoft.Extensions.AI.Apple.FoundationModels.AppleIntelligenceChatClient>();
 #elif ANDROID
-		builder.Services.AddSingleton<IChatClient, Microsoft.Extensions.AI.Android.AICore.AICoreChatClient>();
+		builder.Services.AddSingleton<IChatClient, Microsoft.Extensions.AI.Google.AICore.AICoreChatClient>();
 #else
 		builder.Services.AddSingleton<IChatClient, EchoChatClient>();
 #endif
