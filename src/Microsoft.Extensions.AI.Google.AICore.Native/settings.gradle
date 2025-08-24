@@ -1,0 +1,19 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// NOTE: we can't use '.NET MAUI'
+rootProject.name = "DOTNET MAUI Essentials AI"
+include ':com.microsoft.extensions.ai.google.aicore'

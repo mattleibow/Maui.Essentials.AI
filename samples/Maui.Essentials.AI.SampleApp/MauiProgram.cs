@@ -21,7 +21,11 @@ public static class MauiProgram
 
 		// Services and VMs
 		builder.Services.AddSingleton<ISettingsService, SettingsService>();
+		#if IOS || MACCATALYST
+		builder.Services.AddSingleton<IChatClient,  Microsoft.Extensions.AI.Apple.FoundationModels.AppleIntelligenceChatClient>();
+		#else
 		builder.Services.AddSingleton<IChatClient, EchoChatClient>();
+		#endif
 		builder.Services.AddSingleton<ChatViewModel>();
 		builder.Services.AddSingleton<SettingsViewModel>();
 		builder.Services.AddSingleton<MainPage>();

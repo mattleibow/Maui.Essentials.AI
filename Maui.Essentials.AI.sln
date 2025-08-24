@@ -17,9 +17,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.GeminiNanoSample", "samples\Maui.Essentials.AI.GeminiNanoSample\Maui.Essentials.AI.GeminiNanoSample.csproj", "{B310116F-7D15-472E-826F-086F300C81BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.Android", "src\Maui.Essentials.AI.Android\Maui.Essentials.AI.Android.csproj", "{2197EAC0-7218-4983-8617-91C3C7D53E4F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Extensions.AI.Google.AICore", "src\Microsoft.Extensions.AI.Google.AICore\Microsoft.Extensions.AI.Google.AICore.csproj", "{2197EAC0-7218-4983-8617-91C3C7D53E4F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.Essentials.AI.Apple", "src\Maui.Essentials.AI.Apple\Maui.Essentials.AI.Apple.csproj", "{64711134-BCDF-4218-9A6A-AE66BAD1D3AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Extensions.AI.Apple.FoundationModels", "src\Microsoft.Extensions.AI.Apple.FoundationModels\Microsoft.Extensions.AI.Apple.FoundationModels.csproj", "{64711134-BCDF-4218-9A6A-AE66BAD1D3AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

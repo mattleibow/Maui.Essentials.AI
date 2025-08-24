@@ -5,6 +5,7 @@ using AndroidX.Core.View;
 using AndroidX.RecyclerView.Widget;
 using Google.AI.Edge.AICore;
 using System.Text;
+using Microsoft.Extensions.AI.Google.AICore;
 
 namespace Maui.Essentials.AI.GeminiNanoSample;
 

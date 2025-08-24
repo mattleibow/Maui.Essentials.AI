@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Maui.Essentials.AI.Android\Maui.Essentials.AI.Android.csproj" Version="1.0.4.21" />
+    <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Google.AICore\Microsoft.Extensions.AI.Google.AICore.csproj" Version="1.0.4.21" />
   </ItemGroup>
 
 </Project>
