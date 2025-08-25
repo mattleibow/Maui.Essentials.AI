@@ -8,16 +8,15 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels;
 /// <summary>
 /// Apple Intelligence implementation of ChatClient using native Apple Intelligence APIs
 /// </summary>
-[SupportedOSPlatform ("ios26.0")]
-[SupportedOSPlatform ("maccatalyst26.0")]
-[SupportedOSPlatform ("macos26.0")]
+[SupportedOSPlatform("ios26.0")]
+[SupportedOSPlatform("maccatalyst26.0")]
+[SupportedOSPlatform("macos26.0")]
 public sealed class AppleIntelligenceChatClient : IChatClient
 {
     private readonly SystemLanguageModel _model;
-    private readonly ChatClientMetadata _metadata;
     private bool _disposed;
 
-    public ChatClientMetadata Metadata => _metadata;
+    public ChatClientMetadata Metadata { get; }
 
     /// <summary>
     /// Creates a new AppleIntelligenceChatClient instance
@@ -27,8 +26,8 @@ public sealed class AppleIntelligenceChatClient : IChatClient
     public AppleIntelligenceChatClient()
     {
         _model = SystemLanguageModel.Shared;
-        
-        _metadata = new ChatClientMetadata(
+
+        Metadata = new ChatClientMetadata(
             providerName: "Apple Intelligence",
             defaultModelId: "Apple-Intelligence");
     }
@@ -48,15 +47,15 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
         var session = CreateSession(history);
 
-        var prompt = GetPrompt(lastMessage);
-        var generationOptions = CreateGenerationOptions(options);
+        var prompt = ConvertToPrompt(lastMessage);
+        var generationOptions = ConvertToGenerationOptions(options);
 
         var response = await session.RespondAsync(prompt, generationOptions);
 
         return new ChatResponse
         {
             Messages = { new ChatMessage(ChatRole.Assistant, response.Content) },
-            ModelId = _metadata.DefaultModelId,
+            ModelId = Metadata.DefaultModelId,
             CreatedAt = DateTimeOffset.Now,
             FinishReason = ChatFinishReason.Stop
         };
@@ -78,8 +77,10 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
         var session = CreateSession(history);
 
-        var prompt = GetPrompt(lastMessage);
-        var generationOptions = CreateGenerationOptions(options);
+        var prompt = ConvertToPrompt(lastMessage);
+        var generationOptions = ConvertToGenerationOptions(options);
+
+        var responseId = Guid.NewGuid().ToString("N");
 
         var lastResponse = "";
         await foreach (var response in session.StreamResponseAsync(prompt, generationOptions, cancellationToken))
@@ -94,11 +95,14 @@ public sealed class AppleIntelligenceChatClient : IChatClient
             var updateResponse = response.Substring(lastResponse.Length);
             lastResponse = response;
 
+            var aiContents = ConvertToAIContent(updateResponse);
+
             yield return new ChatResponseUpdate
             {
-                Contents = [new TextContent(updateResponse)],
-                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-                Role = ChatRole.Assistant
+                Contents = aiContents,
+                ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+                Role = ChatRole.Assistant,
+                ResponseId = responseId
             };
         }
 
@@ -106,8 +110,9 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         yield return new ChatResponseUpdate
         {
             FinishReason = ChatFinishReason.Stop,
-            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-            Role = ChatRole.Assistant
+            ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+            Role = ChatRole.Assistant,
+            ResponseId = responseId
         };
     }
 
@@ -120,7 +125,7 @@ public sealed class AppleIntelligenceChatClient : IChatClient
 
         return
             serviceKey is not null ? null :
-            serviceType == typeof(ChatClientMetadata) ? _metadata :
+            serviceType == typeof(ChatClientMetadata) ? Metadata :
             serviceType.IsInstanceOfType(this) ? this :
             null;
     }
@@ -135,7 +140,7 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         GC.SuppressFinalize(this);
     }
 
-    private static GenerationOptions CreateGenerationOptions(ChatOptions? options)
+    private static GenerationOptions ConvertToGenerationOptions(ChatOptions? options)
     {
         var sampling = options?.TopK is int topK
             ? GenerationOptionsSamplingMode.Random(topK: topK, seed: options.Seed)
@@ -206,12 +211,12 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         throw new ArgumentOutOfRangeException(nameof(content), $"Unsupported content type: {content.GetType().Name}");
     }
 
-    private static string GetPrompt(ChatMessage chatMessage)
-    {
-        // TODO: handle other content types
+    private static AIContent[] ConvertToAIContent(string updateResponse) =>
+        [new TextContent(updateResponse ?? string.Empty)];
 
-        return chatMessage.Text;
-    }
+    private static string ConvertToPrompt(ChatMessage chatMessage) =>
+        // TODO: handle other content types
+        chatMessage.Text;
 
     private void EnsureModelAvailability()
     {
