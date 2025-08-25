@@ -36,4 +36,8 @@
     <ProjectReference Include="..\Microsoft.Extensions.AI.Apple.FoundationModels\Microsoft.Extensions.AI.Apple.FoundationModels.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <ProjectReference Include="..\Microsoft.Extensions.AI.Windows.PhiSilica\Microsoft.Extensions.AI.Windows.PhiSilica.csproj" />
+  </ItemGroup>
+
 </Project>
