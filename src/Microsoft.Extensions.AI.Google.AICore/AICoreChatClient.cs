@@ -9,18 +9,16 @@ namespace Microsoft.Extensions.AI.Google.AICore;
 /// </summary>
 public sealed class AICoreChatClient : IChatClient
 {
-    private readonly ChatClientMetadata _metadata;
-
     private bool _disposed;
 
-    public ChatClientMetadata Metadata => _metadata;
+    public ChatClientMetadata Metadata { get; }
 
     /// <summary>
     /// Creates a new AICoreChatClient instance
     /// </summary>
     public AICoreChatClient()
     {
-        _metadata = new ChatClientMetadata(
+        Metadata = new ChatClientMetadata(
             providerName: "Google AI Edge AICore",
             defaultModelId: "Gemini-Nano");
     }
@@ -35,7 +33,7 @@ public sealed class AICoreChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var model = await CreateModel(options, cancellationToken);
+        var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
 
@@ -46,7 +44,7 @@ public sealed class AICoreChatClient : IChatClient
         return new ChatResponse()
         {
             Messages = { new ChatMessage(ChatRole.Assistant, aiContents) },
-            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
+            ModelId = options?.ModelId ?? Metadata.DefaultModelId,
             FinishReason = ChatFinishReason.Stop
         };
     }
@@ -61,9 +59,11 @@ public sealed class AICoreChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var model = await CreateModel(options, cancellationToken);
+        var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
+
+        var responseId = Guid.NewGuid().ToString("N");
 
         await foreach (var response in model.GenerateContentStreamAsync(cancellationToken, contents))
         {
@@ -74,8 +74,9 @@ public sealed class AICoreChatClient : IChatClient
             yield return new ChatResponseUpdate
             {
                 Contents = aiContents,
-                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-                Role = ChatRole.Assistant
+                ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+                Role = ChatRole.Assistant,
+                ResponseId = responseId
             };
         }
 
@@ -83,8 +84,9 @@ public sealed class AICoreChatClient : IChatClient
         yield return new ChatResponseUpdate
         {
             FinishReason = ChatFinishReason.Stop,
-            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-            Role = ChatRole.Assistant
+            ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+            Role = ChatRole.Assistant,
+            ResponseId = responseId
         };
     }
 
@@ -97,12 +99,12 @@ public sealed class AICoreChatClient : IChatClient
 
         return
             serviceKey is not null ? null :
-            serviceType == typeof(ChatClientMetadata) ? _metadata :
+            serviceType == typeof(ChatClientMetadata) ? Metadata :
             serviceType.IsInstanceOfType(this) ? this :
             null;
     }
 
-    private static async Task<GenerativeModel> CreateModel(ChatOptions? options, CancellationToken cancellationToken)
+    private static async Task<GenerativeModel> CreateModelAsync(ChatOptions? options, CancellationToken cancellationToken)
     {
         var config = new GenerationConfig.Builder()
         {
