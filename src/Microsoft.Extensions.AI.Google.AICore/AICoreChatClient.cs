@@ -9,33 +9,25 @@ namespace Microsoft.Extensions.AI.Google.AICore;
 /// </summary>
 public sealed class AICoreChatClient : IChatClient
 {
-    private readonly ChatClientMetadata _metadata;
-
-    private bool _disposed;
-
-    public ChatClientMetadata Metadata => _metadata;
+    public ChatClientMetadata Metadata { get; }
 
     /// <summary>
     /// Creates a new AICoreChatClient instance
     /// </summary>
     public AICoreChatClient()
     {
-        _metadata = new ChatClientMetadata(
-            providerName: "Google AI Edge AICore",
-            defaultModelId: "Gemini-Nano");
+        Metadata = new ChatClientMetadata(
+            providerName: "google",
+            defaultModelId: "gemini-nano");
     }
 
-    /// <summary>
-    /// Gets a chat completion response from Gemini Nano
-    /// </summary>
+    /// <inheritdoc />
     public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
-        var model = await CreateModel(options, cancellationToken);
+        using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
 
@@ -46,24 +38,22 @@ public sealed class AICoreChatClient : IChatClient
         return new ChatResponse()
         {
             Messages = { new ChatMessage(ChatRole.Assistant, aiContents) },
-            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
+            ModelId = options?.ModelId ?? Metadata.DefaultModelId,
             FinishReason = ChatFinishReason.Stop
         };
     }
 
-    /// <summary>
-    /// Gets streaming chat completion updates from Gemini Nano
-    /// </summary>
+    /// <inheritdoc />
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
-        var model = await CreateModel(options, cancellationToken);
+        using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
+
+        var responseId = Guid.NewGuid().ToString("N");
 
         await foreach (var response in model.GenerateContentStreamAsync(cancellationToken, contents))
         {
@@ -74,8 +64,9 @@ public sealed class AICoreChatClient : IChatClient
             yield return new ChatResponseUpdate
             {
                 Contents = aiContents,
-                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-                Role = ChatRole.Assistant
+                ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+                Role = ChatRole.Assistant,
+                ResponseId = responseId
             };
         }
 
@@ -83,28 +74,38 @@ public sealed class AICoreChatClient : IChatClient
         yield return new ChatResponseUpdate
         {
             FinishReason = ChatFinishReason.Stop,
-            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-            Role = ChatRole.Assistant
+            ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+            Role = ChatRole.Assistant,
+            ResponseId = responseId
         };
     }
 
-    /// <summary>
-    /// Gets a service instance from the client
-    /// </summary>
+    /// <inheritdoc />
     object? IChatClient.GetService(Type serviceType, object? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(serviceType);
 
         return
             serviceKey is not null ? null :
-            serviceType == typeof(ChatClientMetadata) ? _metadata :
+            serviceType == typeof(ChatClientMetadata) ? Metadata :
             serviceType.IsInstanceOfType(this) ? this :
             null;
     }
 
-    private static async Task<GenerativeModel> CreateModel(ChatOptions? options, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    void IDisposable.Dispose()
     {
-        var config = new GenerationConfig.Builder()
+        // Nothing to dispose. Implementation required for the IChatClient interface.
+    }
+
+    private GenerationConfig ConvertToGenerationConfig(ChatOptions? options)
+    {
+        // If the user provided a raw representation factory, use it
+        if (options?.RawRepresentationFactory?.Invoke(this) is GenerationConfig rawOptions)
+            return rawOptions;
+
+        // Otherwise, build it up from the ChatOptions
+        var builder = new GenerationConfig.Builder()
         {
             Context = global::Android.App.Application.Context,
             MaxOutputTokens = options?.MaxOutputTokens is int maxTokens
@@ -116,7 +117,16 @@ public sealed class AICoreChatClient : IChatClient
             TopK = options?.TopK is int topK
                 ? Java.Lang.Integer.ValueOf(topK)
                 : null
-        }.Build();
+        };
+
+        var config = builder.Build();
+
+        return config;
+    }
+
+    private async Task<GenerativeModel> CreateModelAsync(ChatOptions? options, CancellationToken cancellationToken)
+    {
+        var config = ConvertToGenerationConfig(options);
 
         // TODO: handle the download callback
 
@@ -161,14 +171,4 @@ public sealed class AICoreChatClient : IChatClient
     private static AIContent[] ConvertToAIContent(GenerateContentResponse response) =>
         // TODO: handle message parts correctly
         [new TextContent(response.Text ?? string.Empty)];
-
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
-    }
 }

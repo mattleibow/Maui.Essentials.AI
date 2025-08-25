@@ -8,78 +8,65 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels;
 /// <summary>
 /// Apple Intelligence implementation of ChatClient using native Apple Intelligence APIs
 /// </summary>
-[SupportedOSPlatform ("ios26.0")]
-[SupportedOSPlatform ("maccatalyst26.0")]
-[SupportedOSPlatform ("macos26.0")]
+[SupportedOSPlatform("ios26.0")]
+[SupportedOSPlatform("maccatalyst26.0")]
+[SupportedOSPlatform("macos26.0")]
 public sealed class AppleIntelligenceChatClient : IChatClient
 {
-    private readonly SystemLanguageModel _model;
-    private readonly ChatClientMetadata _metadata;
-    private bool _disposed;
-
-    public ChatClientMetadata Metadata => _metadata;
+    public ChatClientMetadata Metadata { get; }
 
     /// <summary>
     /// Creates a new AppleIntelligenceChatClient instance
     /// </summary>
-    /// <param name="instructions">System instructions for the AI model</param>
-    /// <param name="modelId">ID of the model for responses</param>
     public AppleIntelligenceChatClient()
     {
-        _model = SystemLanguageModel.Shared;
-        
-        _metadata = new ChatClientMetadata(
-            providerName: "Apple Intelligence",
-            defaultModelId: "Apple-Intelligence");
+        Metadata = new ChatClientMetadata(
+            providerName: "apple",
+            defaultModelId: "apple-intelligence");
     }
 
-    /// <summary>
-    /// Gets a chat completion response from Apple Intelligence
-    /// </summary>
+    /// <inheritdoc />
     public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
         EnsureModelAvailability();
 
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
-        var session = CreateSession(history);
+        using var session = CreateSession(history);
 
-        var prompt = GetPrompt(lastMessage);
-        var generationOptions = CreateGenerationOptions(options);
+        var prompt = ConvertToPrompt(lastMessage);
+
+        using var generationOptions = ConvertToGenerationOptions(options);
 
         var response = await session.RespondAsync(prompt, generationOptions);
 
         return new ChatResponse
         {
             Messages = { new ChatMessage(ChatRole.Assistant, response.Content) },
-            ModelId = _metadata.DefaultModelId,
+            ModelId = Metadata.DefaultModelId,
             CreatedAt = DateTimeOffset.Now,
             FinishReason = ChatFinishReason.Stop
         };
     }
 
-    /// <summary>
-    /// Gets streaming chat completion updates from Apple Intelligence
-    /// Note: Apple Intelligence doesn't support streaming, so this simulates streaming by yielding the complete response
-    /// </summary>
+    /// <inheritdoc />
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
         EnsureModelAvailability();
 
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
-        var session = CreateSession(history);
+        using var session = CreateSession(history);
 
-        var prompt = GetPrompt(lastMessage);
-        var generationOptions = CreateGenerationOptions(options);
+        var prompt = ConvertToPrompt(lastMessage);
+
+        using var generationOptions = ConvertToGenerationOptions(options);
+
+        var responseId = Guid.NewGuid().ToString("N");
 
         var lastResponse = "";
         await foreach (var response in session.StreamResponseAsync(prompt, generationOptions, cancellationToken))
@@ -94,11 +81,14 @@ public sealed class AppleIntelligenceChatClient : IChatClient
             var updateResponse = response.Substring(lastResponse.Length);
             lastResponse = response;
 
+            var aiContents = ConvertToAIContent(updateResponse);
+
             yield return new ChatResponseUpdate
             {
-                Contents = [new TextContent(updateResponse)],
-                ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-                Role = ChatRole.Assistant
+                Contents = aiContents,
+                ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+                Role = ChatRole.Assistant,
+                ResponseId = responseId
             };
         }
 
@@ -106,37 +96,37 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         yield return new ChatResponseUpdate
         {
             FinishReason = ChatFinishReason.Stop,
-            ModelId = options?.ModelId ?? _metadata.DefaultModelId,
-            Role = ChatRole.Assistant
+            ModelId = options?.ModelId ?? Metadata.DefaultModelId,
+            Role = ChatRole.Assistant,
+            ResponseId = responseId
         };
     }
 
-    /// <summary>
-    /// Gets a service instance from the client
-    /// </summary>
+    /// <inheritdoc />
     object? IChatClient.GetService(Type serviceType, object? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(serviceType);
 
         return
             serviceKey is not null ? null :
-            serviceType == typeof(ChatClientMetadata) ? _metadata :
+            serviceType == typeof(ChatClientMetadata) ? Metadata :
             serviceType.IsInstanceOfType(this) ? this :
             null;
     }
 
-    public void Dispose()
+    /// <inheritdoc />
+    void IDisposable.Dispose()
     {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
+        // Nothing to dispose. Implementation required for the IChatClient interface.
     }
 
-    private static GenerationOptions CreateGenerationOptions(ChatOptions? options)
+    private GenerationOptions ConvertToGenerationOptions(ChatOptions? options)
     {
+        // If the user provided a raw representation factory, use it
+        if (options?.RawRepresentationFactory?.Invoke(this) is GenerationOptions rawOptions)
+            return rawOptions;
+
+        // Otherwise, build it up from the ChatOptions
         var sampling = options?.TopK is int topK
             ? GenerationOptionsSamplingMode.Random(topK: topK, seed: options.Seed)
             : null;
@@ -149,13 +139,13 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         return generationOptions;
     }
 
-    private LanguageModelSession CreateSession(List<ChatMessage> history)
+    private static LanguageModelSession CreateSession(List<ChatMessage> history)
     {
         // Convert chat messages to transcript
         var transcript = ConvertToTranscript(history);
 
         // Start a session by rehydrating from a transcript
-        var session = new LanguageModelSession(_model, transcript);
+        var session = new LanguageModelSession(SystemLanguageModel.Shared, transcript);
 
         return session;
     }
@@ -206,16 +196,16 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         throw new ArgumentOutOfRangeException(nameof(content), $"Unsupported content type: {content.GetType().Name}");
     }
 
-    private static string GetPrompt(ChatMessage chatMessage)
-    {
-        // TODO: handle other content types
+    private static AIContent[] ConvertToAIContent(string updateResponse) =>
+        [new TextContent(updateResponse ?? string.Empty)];
 
-        return chatMessage.Text;
-    }
+    private static string ConvertToPrompt(ChatMessage chatMessage) =>
+        // TODO: handle other content types
+        chatMessage.Text;
 
     private void EnsureModelAvailability()
     {
-        switch (_model.Availability)
+        switch (SystemLanguageModel.Shared.Availability)
         {
             case SystemLanguageModelAvailability.Available:
                 return;
