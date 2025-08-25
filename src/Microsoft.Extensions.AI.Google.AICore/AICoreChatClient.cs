@@ -9,8 +9,6 @@ namespace Microsoft.Extensions.AI.Google.AICore;
 /// </summary>
 public sealed class AICoreChatClient : IChatClient
 {
-    private bool _disposed;
-
     public ChatClientMetadata Metadata { get; }
 
     /// <summary>
@@ -19,21 +17,17 @@ public sealed class AICoreChatClient : IChatClient
     public AICoreChatClient()
     {
         Metadata = new ChatClientMetadata(
-            providerName: "Google AI Edge AICore",
-            defaultModelId: "Gemini-Nano");
+            providerName: "google",
+            defaultModelId: "gemini-nano");
     }
 
-    /// <summary>
-    /// Gets a chat completion response from Gemini Nano
-    /// </summary>
+    /// <inheritdoc />
     public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
-        var model = await CreateModelAsync(options, cancellationToken);
+        using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
 
@@ -49,17 +43,13 @@ public sealed class AICoreChatClient : IChatClient
         };
     }
 
-    /// <summary>
-    /// Gets streaming chat completion updates from Gemini Nano
-    /// </summary>
+    /// <inheritdoc />
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
-        var model = await CreateModelAsync(options, cancellationToken);
+        using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
 
@@ -90,9 +80,7 @@ public sealed class AICoreChatClient : IChatClient
         };
     }
 
-    /// <summary>
-    /// Gets a service instance from the client
-    /// </summary>
+    /// <inheritdoc />
     object? IChatClient.GetService(Type serviceType, object? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(serviceType);
@@ -104,9 +92,20 @@ public sealed class AICoreChatClient : IChatClient
             null;
     }
 
-    private static async Task<GenerativeModel> CreateModelAsync(ChatOptions? options, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    void IDisposable.Dispose()
     {
-        var config = new GenerationConfig.Builder()
+        // Nothing to dispose. Implementation required for the IChatClient interface.
+    }
+
+    private GenerationConfig ConvertToGenerationConfig(ChatOptions? options)
+    {
+        // If the user provided a raw representation factory, use it
+        if (options?.RawRepresentationFactory?.Invoke(this) is GenerationConfig rawOptions)
+            return rawOptions;
+
+        // Otherwise, build it up from the ChatOptions
+        var builder = new GenerationConfig.Builder()
         {
             Context = global::Android.App.Application.Context,
             MaxOutputTokens = options?.MaxOutputTokens is int maxTokens
@@ -118,7 +117,16 @@ public sealed class AICoreChatClient : IChatClient
             TopK = options?.TopK is int topK
                 ? Java.Lang.Integer.ValueOf(topK)
                 : null
-        }.Build();
+        };
+
+        var config = builder.Build();
+
+        return config;
+    }
+
+    private async Task<GenerativeModel> CreateModelAsync(ChatOptions? options, CancellationToken cancellationToken)
+    {
+        var config = ConvertToGenerationConfig(options);
 
         // TODO: handle the download callback
 
@@ -163,14 +171,4 @@ public sealed class AICoreChatClient : IChatClient
     private static AIContent[] ConvertToAIContent(GenerateContentResponse response) =>
         // TODO: handle message parts correctly
         [new TextContent(response.Text ?? string.Empty)];
-
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
-    }
 }
