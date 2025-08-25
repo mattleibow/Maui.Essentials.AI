@@ -6,12 +6,16 @@ using System.Text;
 
 namespace Microsoft.Extensions.AI.Windows.PhiSilica;
 
-public class PhiSilicaChatClient : IChatClient
+/// <summary>
+/// Windows implementation of ChatClient using Windows Copilot Runtime (Phi Silica)
+/// </summary>
+public sealed class PhiSilicaChatClient : IChatClient
 {
-    private bool _disposed;
-
     public ChatClientMetadata Metadata { get; }
 
+    /// <summary>
+    /// Creates a new PhiSilicaChatClient instance
+    /// </summary>
     public PhiSilicaChatClient()
     {
         Metadata = new ChatClientMetadata(
@@ -19,19 +23,19 @@ public class PhiSilicaChatClient : IChatClient
             defaultModelId: "phi-silica");
     }
 
+    /// <inheritdoc />
     public Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default) =>
         GetStreamingResponseAsync(chatMessages, options, cancellationToken).ToChatResponseAsync(cancellationToken: cancellationToken);
 
+    /// <inheritdoc />
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
         using var model = await CreateModelAsync(cancellationToken);
 
         var (systemPrompt, history) = NormalizeChatMessages(chatMessages, options);
@@ -71,7 +75,8 @@ public class PhiSilicaChatClient : IChatClient
         };
     }
 
-    public object? GetService(Type serviceType, object? serviceKey = null)
+    /// <inheritdoc />
+    object? IChatClient.GetService(Type serviceType, object? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(serviceType);
 
@@ -80,6 +85,12 @@ public class PhiSilicaChatClient : IChatClient
             serviceType == typeof(ChatClientMetadata) ? Metadata :
             serviceType.IsInstanceOfType(this) ? this :
             null;
+    }
+
+    /// <inheritdoc />
+    void IDisposable.Dispose()
+    {
+        // Nothing to dispose. Implementation required for the IChatClient interface.
     }
 
     private static AIContent[] ConvertToAIContent(string response) =>
@@ -126,16 +137,6 @@ public class PhiSilicaChatClient : IChatClient
         var prompt = promptBuilder.ToString();
 
         return prompt;
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
     }
 
     private LanguageModelOptions ConvertToLanguageModelOptions(ChatOptions? options)

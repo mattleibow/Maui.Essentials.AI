@@ -1,0 +1,13 @@
+<Project>
+
+  <Target
+    Name="WhatIsThis"
+    AfterTargets="AddPriPayloadFilesToCopyToOutputDirectoryItems"
+    Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <ItemGroup>
+      <_AllChildProjectItemsWithTargetPath Remove="@(_ExtraPriPayloadFiles)" />
+      <_ExtraPriPayloadFiles Remove="@(_ExtraPriPayloadFiles)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
