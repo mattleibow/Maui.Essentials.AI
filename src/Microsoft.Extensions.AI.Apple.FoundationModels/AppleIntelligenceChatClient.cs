@@ -13,8 +13,6 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels;
 [SupportedOSPlatform("macos26.0")]
 public sealed class AppleIntelligenceChatClient : IChatClient
 {
-    private bool _disposed;
-
     public ChatClientMetadata Metadata { get; }
 
     /// <summary>
@@ -33,8 +31,6 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
         EnsureModelAvailability();
 
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
@@ -61,8 +57,6 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
         EnsureModelAvailability();
 
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
@@ -121,14 +115,9 @@ public sealed class AppleIntelligenceChatClient : IChatClient
     }
 
     /// <inheritdoc />
-    public void Dispose()
+    void IDisposable.Dispose()
     {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
+        // Nothing to dispose. Implementation required for the IChatClient interface.
     }
 
     private GenerationOptions ConvertToGenerationOptions(ChatOptions? options)

@@ -9,8 +9,6 @@ namespace Microsoft.Extensions.AI.Google.AICore;
 /// </summary>
 public sealed class AICoreChatClient : IChatClient
 {
-    private bool _disposed;
-
     public ChatClientMetadata Metadata { get; }
 
     /// <summary>
@@ -29,8 +27,6 @@ public sealed class AICoreChatClient : IChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
         using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
@@ -53,8 +49,6 @@ public sealed class AICoreChatClient : IChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
         using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
@@ -96,6 +90,12 @@ public sealed class AICoreChatClient : IChatClient
             serviceType == typeof(ChatClientMetadata) ? Metadata :
             serviceType.IsInstanceOfType(this) ? this :
             null;
+    }
+
+    /// <inheritdoc />
+    void IDisposable.Dispose()
+    {
+        // Nothing to dispose. Implementation required for the IChatClient interface.
     }
 
     private GenerationConfig ConvertToGenerationConfig(ChatOptions? options)
@@ -171,14 +171,4 @@ public sealed class AICoreChatClient : IChatClient
     private static AIContent[] ConvertToAIContent(GenerateContentResponse response) =>
         // TODO: handle message parts correctly
         [new TextContent(response.Text ?? string.Empty)];
-
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
-    }
 }
