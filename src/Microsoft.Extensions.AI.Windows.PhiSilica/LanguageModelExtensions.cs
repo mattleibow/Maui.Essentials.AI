@@ -1,61 +1,46 @@
 using Microsoft.Windows.AI.Text;
-using System.Runtime.CompilerServices;
-using Windows.Foundation;
+using System.Threading.Channels;
 
 namespace Microsoft.Extensions.AI.Windows.PhiSilica;
 
 public static class LanguageModelExtensions
 {
-    public static async IAsyncEnumerable<string> GenerateResponseAsync(
+    public static IAsyncEnumerable<string> GenerateResponseAsync(
         this LanguageModel model,
         LanguageModelContext context,
         string prompt,
-        LanguageModelOptions? options = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        LanguageModelOptions options,
+        CancellationToken cancellationToken = default)
     {
-        using var newPartEvent = new ManualResetEventSlim(false);
+        var channel = Channel.CreateUnbounded<string>();
+        var writer = channel.Writer;
+        var reader = channel.Reader;
 
-        if ((ulong)prompt.Length > model.GetUsablePromptLength(context, prompt))
+        var progress = new Progress<string>(response => writer.TryWrite(response));
+
+        var operation = model.GenerateResponseAsync(context, prompt, options);
+
+        _ = operation.AsTask(cancellationToken, progress).ContinueWithWriterComplete(writer);
+
+        return reader.ReadAllAsync(cancellationToken);
+    }
+
+    private static async Task ContinueWithWriterComplete(
+        this Task<LanguageModelResponseResult> task,
+        ChannelWriter<string> writer)
+    {
+        try
         {
-            yield return "\nPrompt larger than context";
-            yield break;
+            var result = await task;
+
+            if (result.Status != LanguageModelResponseStatus.Complete)
+                throw new InvalidOperationException($"Model was not able to complete successfully: {result.Status}");
+
+            writer.TryComplete();
         }
-
-        var progress = model.GenerateResponseAsync(context, prompt, options ?? new());
-
-        string currentResponse = string.Empty;
-
-        progress.Progress = (result, value) =>
+        catch (Exception ex)
         {
-            currentResponse = value;
-            newPartEvent.Set();
-            if (cancellationToken.IsCancellationRequested)
-            {
-                progress.Cancel();
-            }
-        };
-
-        while (progress.Status != AsyncStatus.Completed)
-        {
-            await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding);
-
-            if (newPartEvent.Wait(10, cancellationToken))
-            {
-                yield return currentResponse;
-                newPartEvent.Reset();
-            }
+            writer.TryComplete(ex);
         }
-
-        var response = await progress;
-
-        yield return response?.Status switch
-        {
-            LanguageModelResponseStatus.BlockedByPolicy => "\nBlocked by policy",
-            LanguageModelResponseStatus.PromptBlockedByContentModeration => "\nPrompt blocked by content moderation",
-            LanguageModelResponseStatus.ResponseBlockedByContentModeration => "\nResponse blocked by content moderation",
-            LanguageModelResponseStatus.PromptLargerThanContext => "\nPrompt larger than context",
-            LanguageModelResponseStatus.Error => "\nError",
-            _ => string.Empty,
-        };
     }
 }

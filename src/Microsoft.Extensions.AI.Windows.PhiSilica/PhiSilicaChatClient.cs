@@ -8,13 +8,6 @@ namespace Microsoft.Extensions.AI.Windows.PhiSilica;
 
 public class PhiSilicaChatClient : IChatClient
 {
-    // Search Options
-    private const SeverityLevel DefaultInputModeration = SeverityLevel.Minimum;
-    private const SeverityLevel DefaultOutputModeration = SeverityLevel.Minimum;
-    private const int DefaultTopK = 50;
-    private const float DefaultTopP = 0.9f;
-    private const float DefaultTemperature = 1;
-
     private bool _disposed;
 
     public ChatClientMetadata Metadata { get; }
@@ -22,8 +15,8 @@ public class PhiSilicaChatClient : IChatClient
     public PhiSilicaChatClient()
     {
         Metadata = new ChatClientMetadata(
-            providerName: "PhiSilica",
-            defaultModelId: "PhiSilica");
+            providerName: "windows",
+            defaultModelId: "phi-silica");
     }
 
     public Task<ChatResponse> GetResponseAsync(
@@ -39,17 +32,17 @@ public class PhiSilicaChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var model = await CreateModelAsync(cancellationToken);
+        using var model = await CreateModelAsync(cancellationToken);
 
         var (systemPrompt, history) = NormalizeChatMessages(chatMessages, options);
 
-        var context = string.IsNullOrEmpty(systemPrompt)
+        using var context = string.IsNullOrEmpty(systemPrompt)
             ? model.CreateContext()
             : model.CreateContext(systemPrompt, new ContentFilterOptions());
 
         var prompt = ConvertToPrompt(history);
 
-        var modelOptions = ConvertToModelOptions(options);
+        var modelOptions = ConvertToLanguageModelOptions(options);
 
         var responseId = Guid.NewGuid().ToString("N");
 
@@ -116,21 +109,23 @@ public class PhiSilicaChatClient : IChatClient
     {
         // TODO: this looks suspiciously like it should be adding roles or separators
 
-        var prompt = new StringBuilder();
+        var promptBuilder = new StringBuilder();
 
         foreach (var message in history)
         {
             foreach (var content in message.Contents)
             {
                 if (content is TextContent textContent)
-                    prompt.AppendLine(textContent.Text);
+                    promptBuilder.AppendLine(textContent.Text);
 
                 // TODO: handle other content types
                 throw new ArgumentOutOfRangeException(nameof(content), $"Unsupported content type: {content.GetType().Name}");
             }
         }
 
-        return prompt.ToString();
+        var prompt = promptBuilder.ToString();
+
+        return prompt;
     }
 
     public void Dispose()
@@ -143,12 +138,12 @@ public class PhiSilicaChatClient : IChatClient
         GC.SuppressFinalize(this);
     }
 
-    private static LanguageModelOptions? ConvertToModelOptions(ChatOptions? options)
+    private LanguageModelOptions ConvertToLanguageModelOptions(ChatOptions? options)
     {
         if (options is null)
-            return null;
+            return new();
 
-        var languageModelOptions = new LanguageModelOptions();
+        var languageModelOptions = options.RawRepresentationFactory?.Invoke(this) as LanguageModelOptions ?? new();
 
         if (options.Temperature is { } temp)
             languageModelOptions.Temperature = temp;
@@ -159,30 +154,7 @@ public class PhiSilicaChatClient : IChatClient
         if (options.TopP is { } topP)
             languageModelOptions.TopP = (uint)topP;
 
-        if (ConvertToContentFilterOptions(options) is { } contentFilterOptions)
-            languageModelOptions.ContentFilterOptions = contentFilterOptions;
-
         return languageModelOptions;
-    }
-
-    private static ContentFilterOptions? ConvertToContentFilterOptions(ChatOptions options)
-    {
-        ContentFilterOptions? contentFilterOptions = null;
-
-        if (options.AdditionalProperties?.TryGetValue("input_moderation", out SeverityLevel inputModeration) == true && inputModeration != SeverityLevel.Minimum)
-        {
-            contentFilterOptions ??= new ContentFilterOptions();
-            contentFilterOptions.ImageMaxAllowedSeverityLevel = new(inputModeration);
-            contentFilterOptions.PromptMaxAllowedSeverityLevel = new(inputModeration);
-        }
-
-        if (options.AdditionalProperties?.TryGetValue("output_moderation", out SeverityLevel outputModeration) == true && outputModeration != SeverityLevel.Minimum)
-        {
-            contentFilterOptions ??= new ContentFilterOptions();
-            contentFilterOptions.ResponseMaxAllowedSeverityLevel = new(outputModeration);
-        }
-
-        return contentFilterOptions;
     }
 
     private static async Task<LanguageModel> CreateModelAsync(CancellationToken cancellationToken)
@@ -213,9 +185,9 @@ public class PhiSilicaChatClient : IChatClient
             throw new NotSupportedException("PhiSilica is not available");
         }
 
-        var languageModel = await LanguageModel.CreateAsync();
-
         cancellationToken.ThrowIfCancellationRequested();
+
+        var languageModel = await LanguageModel.CreateAsync();
 
         return languageModel;
     }
