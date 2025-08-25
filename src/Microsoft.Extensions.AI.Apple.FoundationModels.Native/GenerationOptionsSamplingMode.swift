@@ -36,7 +36,10 @@ public class GenerationOptionsSamplingModeWrapper: NSObject {
     }
 
     @objc
-    public static func random(probability threshold: Double, seed: NSNumber? = nil)
+    public static func random(
+        probability threshold: Double,
+        seed: NSNumber? = nil
+    )
         -> GenerationOptionsSamplingModeWrapper
     {
         return GenerationOptionsSamplingModeWrapper(

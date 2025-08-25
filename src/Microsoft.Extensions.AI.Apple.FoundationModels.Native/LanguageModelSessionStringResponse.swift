@@ -5,7 +5,6 @@
 //  Created by Matthew Leibowitz on 2025/08/22.
 //
 
-
 import Foundation
 import FoundationModels
 
@@ -38,5 +37,5 @@ public class LanguageModelSessionStringResponseWrapper: NSObject {
             content: response.content
         )
     }
-    
+
 }

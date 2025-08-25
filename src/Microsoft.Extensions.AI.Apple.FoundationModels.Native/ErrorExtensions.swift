@@ -5,7 +5,6 @@
 //  Created by Matthew Leibowitz on 2025/08/22.
 //
 
-
 import Foundation
 import FoundationModels
 
@@ -83,7 +82,7 @@ extension Error {
             domain: "UnknownErrorDomain",
             code: 0,
             userInfo: [
-                NSLocalizedDescriptionKey: self.localizedDescription,
+                NSLocalizedDescriptionKey: self.localizedDescription
             ]
         )
     }

@@ -5,7 +5,6 @@
 //  Created by Matthew Leibowitz on 2025/08/22.
 //
 
-
 import Foundation
 import FoundationModels
 
@@ -37,7 +36,10 @@ public class LanguageModelSessionWrapper: NSObject {
     }
 
     @objc
-    public init(model: SystemLanguageModelWrapper?, transcript: TranscriptWrapper) {
+    public init(
+        model: SystemLanguageModelWrapper?,
+        transcript: TranscriptWrapper
+    ) {
         actual = LanguageModelSession(
             model: model?.actual ?? SystemLanguageModel.default,
             // TODO: tools: [],
