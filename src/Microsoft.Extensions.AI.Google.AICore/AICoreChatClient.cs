@@ -19,8 +19,8 @@ public sealed class AICoreChatClient : IChatClient
     public AICoreChatClient()
     {
         Metadata = new ChatClientMetadata(
-            providerName: "Google AI Edge AICore",
-            defaultModelId: "Gemini-Nano");
+            providerName: "google",
+            defaultModelId: "gemini-nano");
     }
 
     /// <summary>

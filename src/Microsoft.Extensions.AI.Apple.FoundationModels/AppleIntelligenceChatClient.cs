@@ -28,8 +28,8 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         _model = SystemLanguageModel.Shared;
 
         Metadata = new ChatClientMetadata(
-            providerName: "Apple Intelligence",
-            defaultModelId: "Apple-Intelligence");
+            providerName: "apple",
+            defaultModelId: "apple-intelligence");
     }
 
     /// <summary>
