@@ -23,9 +23,7 @@ public sealed class AICoreChatClient : IChatClient
             defaultModelId: "gemini-nano");
     }
 
-    /// <summary>
-    /// Gets a chat completion response from Gemini Nano
-    /// </summary>
+    /// <inheritdoc />
     public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
@@ -33,7 +31,7 @@ public sealed class AICoreChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var model = await CreateModelAsync(options, cancellationToken);
+        using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
 
@@ -49,9 +47,7 @@ public sealed class AICoreChatClient : IChatClient
         };
     }
 
-    /// <summary>
-    /// Gets streaming chat completion updates from Gemini Nano
-    /// </summary>
+    /// <inheritdoc />
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
@@ -59,7 +55,7 @@ public sealed class AICoreChatClient : IChatClient
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var model = await CreateModelAsync(options, cancellationToken);
+        using var model = await CreateModelAsync(options, cancellationToken);
 
         var contents = ConvertToContent(chatMessages);
 
@@ -90,9 +86,7 @@ public sealed class AICoreChatClient : IChatClient
         };
     }
 
-    /// <summary>
-    /// Gets a service instance from the client
-    /// </summary>
+    /// <inheritdoc />
     object? IChatClient.GetService(Type serviceType, object? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(serviceType);
@@ -104,9 +98,14 @@ public sealed class AICoreChatClient : IChatClient
             null;
     }
 
-    private static async Task<GenerativeModel> CreateModelAsync(ChatOptions? options, CancellationToken cancellationToken)
+    private GenerationConfig ConvertToGenerationConfig(ChatOptions? options)
     {
-        var config = new GenerationConfig.Builder()
+        // If the user provided a raw representation factory, use it
+        if (options?.RawRepresentationFactory?.Invoke(this) is GenerationConfig rawOptions)
+            return rawOptions;
+
+        // Otherwise, build it up from the ChatOptions
+        var builder = new GenerationConfig.Builder()
         {
             Context = global::Android.App.Application.Context,
             MaxOutputTokens = options?.MaxOutputTokens is int maxTokens
@@ -118,7 +117,16 @@ public sealed class AICoreChatClient : IChatClient
             TopK = options?.TopK is int topK
                 ? Java.Lang.Integer.ValueOf(topK)
                 : null
-        }.Build();
+        };
+
+        var config = builder.Build();
+
+        return config;
+    }
+
+    private async Task<GenerativeModel> CreateModelAsync(ChatOptions? options, CancellationToken cancellationToken)
+    {
+        var config = ConvertToGenerationConfig(options);
 
         // TODO: handle the download callback
 
