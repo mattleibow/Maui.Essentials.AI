@@ -8,9 +8,7 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, macOS 26.0, *)
-@available(tvOS, unavailable)
-@available(watchOS, unavailable)
+@available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 @objc(LanguageModelSession)
 public class LanguageModelSessionWrapper: NSObject {
 

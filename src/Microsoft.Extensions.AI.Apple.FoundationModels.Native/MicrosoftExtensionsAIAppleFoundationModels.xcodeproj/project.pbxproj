@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,13 +14,6 @@
 		347BAA992E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA982E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift */; };
 		347BAA9A2E57ED3D00AA1478 /* GenerationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA972E57ED3D00AA1478 /* GenerationOptions.swift */; };
 		347BAA9C2E57F52500AA1478 /* ErrorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347BAA9B2E57F52500AA1478 /* ErrorExtensions.swift */; };
-		34A8A33D2E5B987800EE3376 /* Transcript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A8A33C2E5B987800EE3376 /* Transcript.swift */; };
-		34A8A33F2E5B989100EE3376 /* TranscriptEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A8A33E2E5B989100EE3376 /* TranscriptEntry.swift */; };
-		34A8A3412E5B98A700EE3376 /* TranscriptInstructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A8A3402E5B98A700EE3376 /* TranscriptInstructions.swift */; };
-		34A8A3432E5B98AD00EE3376 /* TranscriptPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A8A3422E5B98AD00EE3376 /* TranscriptPrompt.swift */; };
-		34A8A3452E5B98B200EE3376 /* TranscriptResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A8A3442E5B98B200EE3376 /* TranscriptResponse.swift */; };
-		34A8A3472E5B98B700EE3376 /* TranscriptSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A8A3462E5B98B700EE3376 /* TranscriptSegment.swift */; };
-		34A8A3492E5B98BB00EE3376 /* TranscriptTextSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A8A3482E5B98BB00EE3376 /* TranscriptTextSegment.swift */; };
 		83E34F572C21CB2B008AA950 /* MicrosoftExtensionsAIAppleFoundationModels.h in Headers */ = {isa = PBXBuildFile; fileRef = 83E34F562C21CB2B008AA950 /* MicrosoftExtensionsAIAppleFoundationModels.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
@@ -32,16 +25,14 @@
 		347BAA972E57ED3D00AA1478 /* GenerationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationOptions.swift; sourceTree = "<group>"; };
 		347BAA982E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationOptionsSamplingMode.swift; sourceTree = "<group>"; };
 		347BAA9B2E57F52500AA1478 /* ErrorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorExtensions.swift; sourceTree = "<group>"; };
-		34A8A33C2E5B987800EE3376 /* Transcript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transcript.swift; sourceTree = "<group>"; };
-		34A8A33E2E5B989100EE3376 /* TranscriptEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptEntry.swift; sourceTree = "<group>"; };
-		34A8A3402E5B98A700EE3376 /* TranscriptInstructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptInstructions.swift; sourceTree = "<group>"; };
-		34A8A3422E5B98AD00EE3376 /* TranscriptPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptPrompt.swift; sourceTree = "<group>"; };
-		34A8A3442E5B98B200EE3376 /* TranscriptResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptResponse.swift; sourceTree = "<group>"; };
-		34A8A3462E5B98B700EE3376 /* TranscriptSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegment.swift; sourceTree = "<group>"; };
-		34A8A3482E5B98BB00EE3376 /* TranscriptTextSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptTextSegment.swift; sourceTree = "<group>"; };
 		83E34F532C21CB2B008AA950 /* MicrosoftExtensionsAIAppleFoundationModels.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MicrosoftExtensionsAIAppleFoundationModels.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		83E34F562C21CB2B008AA950 /* MicrosoftExtensionsAIAppleFoundationModels.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MicrosoftExtensionsAIAppleFoundationModels.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		348599B22E5D591100076839 /* Tools */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Tools; sourceTree = "<group>"; };
+		348599B32E5D591E00076839 /* Transcripts */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Transcripts; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		83E34F502C21CB2B008AA950 /* Frameworks */ = {
@@ -63,16 +54,11 @@
 				347BAA972E57ED3D00AA1478 /* GenerationOptions.swift */,
 				347BAA982E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift */,
 				347BAA912E57D60F00AA1478 /* LanguageModelSession.swift */,
-				34A8A3482E5B98BB00EE3376 /* TranscriptTextSegment.swift */,
-				34A8A3462E5B98B700EE3376 /* TranscriptSegment.swift */,
-				34A8A3442E5B98B200EE3376 /* TranscriptResponse.swift */,
-				34A8A3422E5B98AD00EE3376 /* TranscriptPrompt.swift */,
-				34A8A3402E5B98A700EE3376 /* TranscriptInstructions.swift */,
-				34A8A33E2E5B989100EE3376 /* TranscriptEntry.swift */,
-				34A8A33C2E5B987800EE3376 /* Transcript.swift */,
 				347BAA932E57D6F600AA1478 /* LanguageModelSessionStringResponse.swift */,
 				347BAA8D2E57D5EF00AA1478 /* SystemLanguageModel.swift */,
 				347BAA952E57D72200AA1478 /* SystemLanguageModelAvailability.swift */,
+				348599B32E5D591E00076839 /* Transcripts */,
+				348599B22E5D591100076839 /* Tools */,
 			);
 			sourceTree = "<group>";
 		};
@@ -110,6 +96,10 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				348599B22E5D591100076839 /* Tools */,
+				348599B32E5D591E00076839 /* Transcripts */,
 			);
 			name = MicrosoftExtensionsAIAppleFoundationModels;
 			productName = MicrosoftExtensionsAIAppleFoundationModels;
@@ -164,18 +154,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				34A8A3492E5B98BB00EE3376 /* TranscriptTextSegment.swift in Sources */,
 				347BAA8E2E57D5EF00AA1478 /* SystemLanguageModel.swift in Sources */,
 				347BAA962E57D72200AA1478 /* SystemLanguageModelAvailability.swift in Sources */,
-				34A8A33F2E5B989100EE3376 /* TranscriptEntry.swift in Sources */,
 				347BAA9C2E57F52500AA1478 /* ErrorExtensions.swift in Sources */,
-				34A8A3452E5B98B200EE3376 /* TranscriptResponse.swift in Sources */,
-				34A8A3472E5B98B700EE3376 /* TranscriptSegment.swift in Sources */,
 				347BAA942E57D6F600AA1478 /* LanguageModelSessionStringResponse.swift in Sources */,
-				34A8A3432E5B98AD00EE3376 /* TranscriptPrompt.swift in Sources */,
 				347BAA922E57D60F00AA1478 /* LanguageModelSession.swift in Sources */,
-				34A8A3412E5B98A700EE3376 /* TranscriptInstructions.swift in Sources */,
-				34A8A33D2E5B987800EE3376 /* Transcript.swift in Sources */,
 				347BAA992E57ED3D00AA1478 /* GenerationOptionsSamplingMode.swift in Sources */,
 				347BAA9A2E57ED3D00AA1478 /* GenerationOptions.swift in Sources */,
 			);
