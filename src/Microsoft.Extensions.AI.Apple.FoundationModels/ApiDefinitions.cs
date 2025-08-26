@@ -133,6 +133,41 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 		SystemLanguageModelAvailability Availability { get; }
 	}
 
+	// @protocol Tool
+	[Introduced (PlatformName.iOS, 26, 0)]
+	[Introduced (PlatformName.MacCatalyst, 26, 0)]
+	[Introduced (PlatformName.MacOSX, 26, 0)]
+	[BaseType (typeof(NSObject))]
+	[Protocol]
+	[Model]
+	interface Tool
+	{
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull name;
+		[Abstract]
+		[Export ("name")]
+		string Name { get; }
+
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull description;
+		[Abstract]
+		[Export ("description")]
+		string Description { get; }
+
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull argumentsSchema;
+		[Abstract]
+		[Export ("argumentsSchema")]
+		string ArgumentsSchema { get; }
+
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull outputSchema;
+		[Abstract]
+		[Export ("outputSchema")]
+		string OutputSchema { get; }
+
+		// @required -(void)callWithArguments:(NSString * _Nonnull)arguments completionHandler:(void (^ _Nonnull)(NSString * _Nonnull))completionHandler;
+		[Abstract]
+		[Export ("callWithArguments:completionHandler:")]
+		void Call (string arguments, Action<string> completionHandler);
+	}
+
 	// @interface TranscriptEntry
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]

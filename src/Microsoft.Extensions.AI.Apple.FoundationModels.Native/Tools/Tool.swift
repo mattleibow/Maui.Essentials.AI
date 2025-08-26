@@ -11,9 +11,9 @@ import FoundationModels
 @available(iOS 26.0, macOS 26.0, macCatalyst 26.0, visionOS 26.0, *)
 @objc(Tool)
 public protocol ToolWrapper: Sendable {
-    var toolName: String { get }
-    var toolDescription: String { get }
-    var toolArgumentsSchema: String { get }
-    var toolOutputSchema: String { get }
-    func call(json: String) async -> String
+    var name: String { get }
+    var description: String { get }
+    var argumentsSchema: String { get }
+    var outputSchema: String { get }
+    func call(arguments: String) async -> String
 }

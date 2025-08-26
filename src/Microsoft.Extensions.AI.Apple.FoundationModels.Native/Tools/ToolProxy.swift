@@ -13,21 +13,21 @@ struct ToolProxy: Tool {
 
     let actual: any ToolWrapper
 
-    public var name: String { actual.toolName }
+    public var name: String { actual.name }
 
-    public var description: String { actual.toolDescription }
+    public var description: String { actual.description }
 
     public let parameters: GenerationSchema
 
     public init(tool: ToolWrapper) {
         actual = tool
         parameters =
-            JsonSchemaDecoder.parseGenerationSchema(actual.toolArgumentsSchema)
+            JsonSchemaDecoder.parseGenerationSchema(actual.argumentsSchema)
             ?? JsonSchemaDecoder.StringGenerationSchema
     }
 
     public func call(arguments: Arguments) async throws -> Output {
-        let result = await actual.call(json: arguments.json)
+        let result = await actual.call(arguments: arguments.json)
         return .init(json: result)
     }
 
