@@ -25,10 +25,19 @@ public class LanguageModelSessionWrapper: NSObject {
     }
 
     @objc
-    public init(model: SystemLanguageModelWrapper?, instructions: String?) {
+    public init(transcript: TranscriptWrapper) {
+        actual = LanguageModelSession(transcript: transcript.actual)
+    }
+
+    @objc
+    public init(
+        model: SystemLanguageModelWrapper?,
+        tools: [ToolWrapper]?,
+        instructions: String?
+    ) {
         actual = LanguageModelSession(
             model: model?.actual ?? SystemLanguageModel.default,
-            // TODO: tools: [],
+            tools: tools?.map { ToolProxy(tool: $0) } ?? [],
             instructions: instructions
         )
     }
@@ -36,11 +45,12 @@ public class LanguageModelSessionWrapper: NSObject {
     @objc
     public init(
         model: SystemLanguageModelWrapper?,
+        tools: [ToolWrapper]?,
         transcript: TranscriptWrapper
     ) {
         actual = LanguageModelSession(
             model: model?.actual ?? SystemLanguageModel.default,
-            // TODO: tools: [],
+            tools: tools?.map { ToolProxy(tool: $0) } ?? [],
             transcript: transcript.actual
         )
     }
@@ -71,10 +81,12 @@ public class LanguageModelSessionWrapper: NSObject {
         Task.detached {
             do {
                 let generationOptions = options?.actual ?? GenerationOptions()
+
                 let response = try await self.actual.respond(
                     to: prompt,
                     options: generationOptions
                 )
+
                 onComplete(.create(from: response), nil)
             } catch let error as LanguageModelSession.GenerationError {
                 onComplete(nil, error.toNSError())
@@ -109,14 +121,18 @@ public class LanguageModelSessionWrapper: NSObject {
         Task.detached {
             do {
                 let generationOptions = options?.actual ?? GenerationOptions()
+
                 let stream = self.actual.streamResponse(
                     to: prompt,
                     options: generationOptions
                 )
+
                 for try await partial in stream {
                     onNext(partial.content)
                 }
+
                 let response = try await stream.collect()
+
                 onComplete(.create(from: response), nil)
             } catch let error as LanguageModelSession.GenerationError {
                 onComplete(nil, error.toNSError())

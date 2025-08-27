@@ -12,47 +12,56 @@ import FoundationModels
 struct ToolProxy: Tool {
 
     let actual: any ToolWrapper
+    let name: String
+    let description: String
+    let parameters: GenerationSchema
+    let output: GenerationSchema
 
-    public var name: String { actual.name }
-
-    public var description: String { actual.description }
-
-    public let parameters: GenerationSchema
-
-    public init(tool: ToolWrapper) {
+    init(tool: ToolWrapper) {
         actual = tool
+        name = actual.name
+        description = actual.description
         parameters =
-            JsonSchemaDecoder.parseGenerationSchema(actual.argumentsSchema)
+            (try? JsonSchemaDecoder.parse(actual.argumentsSchema))
+            ?? JsonSchemaDecoder.StringGenerationSchema
+        output =
+            (try? JsonSchemaDecoder.parse(actual.outputSchema))
             ?? JsonSchemaDecoder.StringGenerationSchema
     }
 
-    public func call(arguments: Arguments) async throws -> Output {
+    func call(arguments: Arguments) async throws -> Output {
         let result = await actual.call(arguments: arguments.json)
-        return .init(json: result)
+        return try .init(json: result, schema: output)
     }
 
-    public class Output: PromptRepresentable {
-
-        public var promptRepresentation: Prompt
-
-        public init(json: String) {
-            promptRepresentation = .init({
-                json
-            })
-        }
-
-    }
-
-    public class Arguments: ConvertibleFromGeneratedContent {
+    struct Arguments: ConvertibleFromGeneratedContent {
 
         let id: GenerationID?
         let json: String
         let generatedContent: GeneratedContent
 
-        public required init(_ content: GeneratedContent) throws {
+        init(_ content: GeneratedContent) throws {
             id = content.id
             json = content.jsonString
             generatedContent = content.generatedContent
+        }
+
+    }
+
+    struct Output: ConvertibleToGeneratedContent {
+
+        let promptRepresentation: Prompt
+        let generatedContent: GeneratedContent
+
+        init(json: String, schema: GenerationSchema) throws {
+            promptRepresentation = .init({
+                json
+            })
+            do {
+                generatedContent = try .init(json: json)
+            } catch {
+                generatedContent = .init(json)
+            }
         }
 
     }
