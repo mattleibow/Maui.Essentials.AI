@@ -8,6 +8,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface GenerationOptionsSamplingMode
@@ -32,6 +33,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	interface GenerationOptions
 	{
@@ -57,6 +59,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface LanguageModelSessionStringResponse
@@ -70,6 +73,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	interface LanguageModelSession
 	{
@@ -78,15 +82,20 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 		[DesignatedInitializer]
 		NativeHandle Constructor ([NullAllowed] string instructions);
 
-		// -(instancetype _Nonnull)initWithModel:(SystemLanguageModel * _Nullable)model instructions:(NSString * _Nullable)instructions __attribute__((objc_designated_initializer));
-		[Export ("initWithModel:instructions:")]
+		// -(instancetype _Nonnull)initWithTranscript:(Transcript * _Nonnull)transcript __attribute__((objc_designated_initializer));
+		[Export ("initWithTranscript:")]
 		[DesignatedInitializer]
-		NativeHandle Constructor ([NullAllowed] SystemLanguageModel model, [NullAllowed] string instructions);
+		NativeHandle Constructor (Transcript transcript);
 
-		// -(instancetype _Nonnull)initWithModel:(SystemLanguageModel * _Nullable)model transcript:(Transcript * _Nonnull)transcript __attribute__((objc_designated_initializer));
-		[Export ("initWithModel:transcript:")]
+		// -(instancetype _Nonnull)initWithModel:(SystemLanguageModel * _Nullable)model tools:(id)tools instructions:(NSString * _Nullable)instructions __attribute__((objc_designated_initializer));
+		[Export ("initWithModel:tools:instructions:")]
 		[DesignatedInitializer]
-		NativeHandle Constructor ([NullAllowed] SystemLanguageModel model, Transcript transcript);
+		NativeHandle Constructor ([NullAllowed] SystemLanguageModel model, [NullAllowed] ITool[] tools, [NullAllowed] string instructions);
+
+		// -(instancetype _Nonnull)initWithModel:(SystemLanguageModel * _Nullable)model tools:(id)tools transcript:(Transcript * _Nonnull)transcript __attribute__((objc_designated_initializer));
+		[Export ("initWithModel:tools:transcript:")]
+		[DesignatedInitializer]
+		NativeHandle Constructor ([NullAllowed] SystemLanguageModel model, [NullAllowed] ITool[] tools, Transcript transcript);
 
 		// @property (readonly, nonatomic) int isResponding;
 		[Export ("isResponding")]
@@ -115,6 +124,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface SystemLanguageModel
@@ -133,10 +143,49 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 		SystemLanguageModelAvailability Availability { get; }
 	}
 
+	interface ITool { }
+
+	// @protocol Tool
+	[Introduced (PlatformName.iOS, 26, 0)]
+	[Introduced (PlatformName.MacCatalyst, 26, 0)]
+	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
+	[BaseType (typeof(NSObject))]
+	[Protocol]
+	[Model]
+	interface Tool
+	{
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull name;
+		[Abstract]
+		[Export ("name")]
+		string Name { get; }
+
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull description;
+		[Abstract]
+		[Export ("description")]
+		string Description { get; }
+
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull argumentsSchema;
+		[Abstract]
+		[Export ("argumentsSchema")]
+		string ArgumentsSchema { get; }
+
+		// @required @property (readonly, copy, nonatomic) NSString * _Nonnull outputSchema;
+		[Abstract]
+		[Export ("outputSchema")]
+		string OutputSchema { get; }
+
+		// @required -(void)callWithArguments:(NSString * _Nonnull)arguments completionHandler:(void (^ _Nonnull)(NSString * _Nonnull))completionHandler;
+		[Abstract]
+		[Export ("callWithArguments:completionHandler:")]
+		void Call (string arguments, Action<string> completionHandler);
+	}
+
 	// @interface TranscriptEntry
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface TranscriptEntry
@@ -161,6 +210,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface TranscriptInstructions
@@ -184,6 +234,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface TranscriptPrompt
@@ -207,6 +258,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface TranscriptResponse
@@ -230,6 +282,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface TranscriptSegment
@@ -244,6 +297,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface TranscriptTextSegment
@@ -271,6 +325,7 @@ namespace Microsoft.Extensions.AI.Apple.FoundationModels
 	[Introduced (PlatformName.iOS, 26, 0)]
 	[Introduced (PlatformName.MacCatalyst, 26, 0)]
 	[Introduced (PlatformName.MacOSX, 26, 0)]
+	// [Introduced (PlatformName.VisionOS, 26, 0)]
 	[BaseType (typeof(NSObject))]
 	[DisableDefaultCtor]
 	interface Transcript

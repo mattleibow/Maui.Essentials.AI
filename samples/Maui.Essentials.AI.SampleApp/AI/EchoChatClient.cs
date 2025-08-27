@@ -1,7 +1,8 @@
+using Maui.Essentials.AI.SampleApp.Services;
 using Microsoft.Extensions.AI;
 using System.Runtime.CompilerServices;
 
-namespace Maui.Essentials.AI.SampleApp.Services;
+namespace Maui.Essentials.AI.SampleApp.AI;
 
 /// <summary>
 /// Simple echo implementation of ChatClient for testing and fallback scenarios

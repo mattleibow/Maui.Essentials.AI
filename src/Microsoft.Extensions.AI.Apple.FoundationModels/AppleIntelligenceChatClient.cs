@@ -2,6 +2,10 @@ using Microsoft.Extensions.AI;
 using System.Runtime.CompilerServices;
 using Foundation;
 using System.Runtime.Versioning;
+using ObjCRuntime;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Microsoft.Extensions.AI.Apple.FoundationModels;
 
@@ -34,7 +38,7 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         EnsureModelAvailability();
 
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
-        using var session = CreateSession(history);
+        using var session = CreateSession(history, options);
 
         var prompt = ConvertToPrompt(lastMessage);
 
@@ -60,7 +64,7 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         EnsureModelAvailability();
 
         var (history, lastMessage) = NormalizeChatMessages(chatMessages, options);
-        using var session = CreateSession(history);
+        using var session = CreateSession(history, options);
 
         var prompt = ConvertToPrompt(lastMessage);
 
@@ -139,13 +143,16 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         return generationOptions;
     }
 
-    private static LanguageModelSession CreateSession(List<ChatMessage> history)
+    private static LanguageModelSession CreateSession(List<ChatMessage> history, ChatOptions? options)
     {
         // Convert chat messages to transcript
         var transcript = ConvertToTranscript(history);
 
+        // Wrap the .NET tools in native objects
+        var tools = ConvertToTools(options?.Tools);
+
         // Start a session by rehydrating from a transcript
-        var session = new LanguageModelSession(SystemLanguageModel.Shared, transcript);
+        var session = new LanguageModelSession(SystemLanguageModel.Shared, tools, transcript);
 
         return session;
     }
@@ -170,6 +177,22 @@ public sealed class AppleIntelligenceChatClient : IChatClient
         var entries = chatMessages.Select(ConvertToTranscriptEntry).ToArray();
         return new Transcript(entries);
     }
+
+    private static ITool[]? ConvertToTools(IEnumerable<AITool>? tools)
+    {
+        if (tools is null)
+            return null;
+
+        var wrappedTools = tools
+            .OfType<AIFunction>()
+            .Select(ConvertToTool)
+            .ToArray();
+
+        return wrappedTools;
+    }
+
+    private static ITool ConvertToTool(AIFunction aiFunction) =>
+        new DotNetTool(aiFunction);
 
     private static TranscriptEntry ConvertToTranscriptEntry(ChatMessage chatMessage)
     {
@@ -219,5 +242,68 @@ public sealed class AppleIntelligenceChatClient : IChatClient
             default:
                 throw new InvalidOperationException("Apple Intelligence is unavailable.");
         }
+    }
+
+    private class DotNetTool(AIFunction aiFunction) : Tool
+    {
+        public override string Name =>
+            aiFunction.Name;
+
+        public override string Description =>
+            aiFunction.Description;
+
+        public override string ArgumentsSchema =>
+            aiFunction.JsonSchema.GetRawText();
+
+        public override string OutputSchema =>
+            aiFunction.ReturnJsonSchema?.GetRawText() ?? "{\"type\": \"string\"}";
+
+        public override async void Call(string arguments, Action<string> completionHandler)
+        {
+            try
+            {
+                var jsonOptions = new JsonSerializerOptions(AIJsonUtilities.DefaultOptions);
+                var aiArgs = JsonSerializer.Deserialize<AIFunctionArguments>(arguments, jsonOptions);
+
+                var result = await aiFunction.InvokeAsync(aiArgs);
+
+                if (result?.ToString() is { } resultString)
+                {
+                    completionHandler(resultString);
+                }
+                else
+                {
+                    completionHandler(string.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                completionHandler($"There was an error calling tool: {ex.Message}");
+            }
+        }
+    }
+
+    internal sealed class ToolJson
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = "object";
+
+        [JsonPropertyName("title")]
+        public string? Title { get; set; }
+
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
+
+        [JsonPropertyName("required")]
+        public HashSet<string>? Required { get; set; }
+
+        [JsonPropertyName("properties")]
+        public Dictionary<string, ToolJson>? Properties { get; set; }
+
+        [JsonPropertyName("items")]
+        public List<ToolJson>? Items { get; set; }
+
+        [JsonPropertyName("additionalProperties")]
+        public bool AdditionalProperties { get; set; }
     }
 }

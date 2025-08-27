@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Maui.Essentials.AI.SampleApp.AI;
 using Maui.Essentials.AI.SampleApp.Services;
 using Maui.Essentials.AI.SampleApp.ViewModels;
 using Maui.Essentials.AI.SampleApp.Pages;

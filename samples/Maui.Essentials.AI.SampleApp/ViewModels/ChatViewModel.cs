@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.AI;
 using Maui.Essentials.AI.SampleApp.Services;
+using Maui.Essentials.AI.SampleApp.AI;
 
 namespace Maui.Essentials.AI.SampleApp.ViewModels;
 
@@ -11,11 +12,21 @@ public partial class ChatViewModel : ObservableObject
 {
     private readonly IChatClient _chatClient;
     private readonly ISettingsService _settingsService;
+    private readonly ChatOptions _defaultChatOptions;
 
     public ChatViewModel(IChatClient chatClient, ISettingsService settingsService)
     {
         _chatClient = chatClient;
         _settingsService = settingsService;
+
+        _defaultChatOptions = new ChatOptions
+        {
+            Tools =
+            [
+                new CurrentDateTool(),
+                new WordSelectionTool(this)
+            ]
+        };
 
         Messages.CollectionChanged += (_, __) => (NewChatCommand as Command)?.ChangeCanExecute();
 
@@ -47,15 +58,23 @@ public partial class ChatViewModel : ObservableObject
     private bool _useStreaming = true;
 
     [ObservableProperty]
-    private string _systemMessage = "You are a helpful AI assistant.";
+    private string _systemMessage = """
+        You are a helpful AI assistant.
+
+        You have a collection of tools or functions that
+        you can call.
+        
+        However, never call them without first being
+        requested by the user for that specific action.
+        Never proactively offer to call these tools.
+        """;
 
     public IReadOnlyList<string> SuggestedPrompts { get; } =
     [
-        "Create an image",
-        "Translate into Gen Z",
-        "Write a first draft",
-        "Brainstorm ideas",
-        "Summarize this text"
+        "What is the date today?",
+        "Ask me to pick a word: dotnet, maui, app",
+        "Give me an idea on what cool MCP tool I can add to this sample app.",
+        "What is the sentiment of: .NET MAUI is amazing!",
     ];
 
     private void OnSettingsChanged(object? sender, EventArgs e)
@@ -63,6 +82,12 @@ public partial class ChatViewModel : ObservableObject
         UseStreaming = _settingsService.UseStreaming;
         SystemMessage = _settingsService.SystemMessage;
     }
+
+    [RelayCommand]
+    private void SelectWord(WordSelectionStartedEventArgs args) =>
+        WordSelectionStarted?.Invoke(this, args);
+
+    public event EventHandler<WordSelectionStartedEventArgs>? WordSelectionStarted;
 
     [RelayCommand]
     private void UsePrompt(string prompt)
@@ -79,7 +104,7 @@ public partial class ChatViewModel : ObservableObject
     {
         if (IsGenerating)
             return;
-            
+
         Input = string.Empty;
         Messages.Clear();
         HasStarted = false;
@@ -103,16 +128,22 @@ public partial class ChatViewModel : ObservableObject
         var userMessage = new ChatMessageViewModel(ChatMessageRole.User, text);
         Messages.Add(userMessage);
 
+        // Convert UI messages to AI client messages
+        var aiMessages = ConvertToAIMessages(Messages);
+
+        // Create the options with tools
+        var aiOptions = _defaultChatOptions.Clone();
+
         // Send the request to AI
         try
         {
             if (UseStreaming)
             {
-                await SendStreamingAsync();
+                await SendStreamingAsync(aiMessages, aiOptions);
             }
             else
             {
-                await SendNonStreamingAsync();
+                await SendNonStreamingAsync(aiMessages, aiOptions);
             }
         }
         catch (Exception ex)
@@ -126,18 +157,15 @@ public partial class ChatViewModel : ObservableObject
         }
     }
 
-    private async Task SendStreamingAsync()
+    private async Task SendStreamingAsync(IList<ChatMessage> aiMessages, ChatOptions aiOptions)
     {
         // Create assistant message placeholder for streaming updates
         var assistantMessage = new ChatMessageViewModel(ChatMessageRole.Assistant, "");
         Messages.Add(assistantMessage);
 
-        // Convert UI messages to AI client messages
-        var aiMessages = ConvertToAIMessages(Messages.Take(Messages.Count - 1));
-        
         // Send the request
         var responseBuilder = new StringBuilder();
-        await foreach (var update in _chatClient.GetStreamingResponseAsync(aiMessages))
+        await foreach (var update in _chatClient.GetStreamingResponseAsync(aiMessages, aiOptions))
         {
             if (update.Contents is not { } contents)
                 continue;
@@ -156,14 +184,11 @@ public partial class ChatViewModel : ObservableObject
         }
     }
 
-    private async Task SendNonStreamingAsync()
+    private async Task SendNonStreamingAsync(IList<ChatMessage> aiMessages, ChatOptions aiOptions)
     {
-        // Convert UI messages to AI client messages
-        var aiMessages = ConvertToAIMessages(Messages);
-        
         // Send the request
-        var response = await _chatClient.GetResponseAsync(aiMessages);
-        
+        var response = await _chatClient.GetResponseAsync(aiMessages, aiOptions);
+
         if (response.Messages?.FirstOrDefault() is { } responseMessage)
         {
             var text = GetTextFromAIMessage(responseMessage);
@@ -178,18 +203,18 @@ public partial class ChatViewModel : ObservableObject
     private List<ChatMessage> ConvertToAIMessages(IEnumerable<ChatMessageViewModel> uiMessages)
     {
         var messages = new List<ChatMessage>();
-        
+
         // Add system message first if it's not empty
         if (!string.IsNullOrWhiteSpace(SystemMessage))
             messages.Add(new ChatMessage(ChatRole.System, SystemMessage));
-        
+
         // Add conversation history (exclude any system messages from UI as they should come from settings)
         var conversationMessages = uiMessages
             .Where(m => m.Role != ChatMessageRole.System)
             .Select(ConvertToAIMessage);
-            
+
         messages.AddRange(conversationMessages);
-        
+
         return messages;
     }
 
