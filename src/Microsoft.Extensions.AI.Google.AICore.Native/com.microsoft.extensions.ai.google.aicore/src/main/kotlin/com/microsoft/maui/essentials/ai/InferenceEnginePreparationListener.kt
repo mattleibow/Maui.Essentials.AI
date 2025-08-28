@@ -1,4 +1,4 @@
-package com.microsoft.com.microsoft.extensions.ai.google.aicore
+package com.microsoft.extensions.ai.google.aicore
 
 interface InferenceEnginePreparationListener {
     fun onSuccess()
